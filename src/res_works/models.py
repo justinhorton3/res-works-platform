@@ -51,6 +51,12 @@ class RuleProfile(RESModel):
     status: Literal["draft", "verified", "needs_ahj_confirmation"] = "draft"
 
 
+class ProjectClassification(RESModel):
+    project_type: Literal["new_construction", "remodel", "addition"]
+    county: str
+    municipality: str | None = None
+
+
 class Requirement(RESModel):
     id: str
     rule_profile_id: str
