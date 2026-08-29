@@ -250,3 +250,16 @@ class PlanGeometry(RESModel):
     openings: list[Opening] = Field(default_factory=list)
     stairs: list[Stair] = Field(default_factory=list)
     porches: list[Rect] = Field(default_factory=list)
+
+
+class CaprojInventory(RESModel):
+    filename: str
+    sha256: str
+    byte_size: int
+    manifest_version: int | None = None
+    schema_version: int | None = None
+    native_plan_files: list[str] = Field(default_factory=list)
+    native_layout_files: list[str] = Field(default_factory=list)
+    resource_count: int = 0
+    export_errors: list[str] = Field(default_factory=list)
+    missing_resources: list[str] = Field(default_factory=list)
