@@ -17,6 +17,10 @@ operational documentation for RES Works.
 - [Execution plan](execution-plan.md) - product order, phases, deliverables,
   acceptance criteria, and first implementation sprint.
 
+The remaining implementation is grouped into five reviewable commits in the
+execution plan, beginning with `.caproj` package intake and DXF/DWG geometry
+evidence.
+
 ## Planned documents
 
 - `architecture.md` - components, trust boundaries, data flow, and deployment

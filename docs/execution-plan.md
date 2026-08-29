@@ -293,3 +293,51 @@ Until those office standards are supplied, RES Works can build the data model,
 workflow, source registry, and test harness, but it should not invent a final
 office note library or claim that generated details are production-ready.
 
+## Remaining delivery grouped into five meaningful commits
+
+Each remaining commit is a vertical, locally usable slice with tests. UI
+polish stays separate from model, ingestion, and validation work.
+
+### Commit A — Chief package intake
+
+Ingest `.caproj` without modification; validate and inventory its manifest;
+identify `.plan`, `.layout`, resources, export errors, and missing files; hash
+contained source artifacts; and persist package relationships.
+
+Exit: a package can be reopened locally and its native files are traceable.
+
+### Commit B — DXF/DWG geometry evidence
+
+Accept DXF as the first parseable CAD format; record units, layers, entities,
+dimensions, and text; preserve layer names and entity IDs; compare CAD
+evidence with explicit plan geometry; and document the DWG conversion boundary.
+
+Exit: the Sweeter Build DXF produces a reviewable geometry inventory.
+
+### Commit C — Evidence-to-documentation recommendations
+
+Map package, CAD, PDF, and geometry facts to library items; identify missing
+notes, callouts, CAD details, structural details, and schedules; generate
+reasons, evidence links, target sheets/views, and confidence; and route
+engineering conditions to professional review.
+
+Exit: the package produces an actionable documentation change list.
+
+### Commit D — Approval and Chief handoff
+
+Add approve, edit, reject, defer, and clarification decisions; preserve
+library masters separately from project instances; create change sets,
+checkpoints, rollback records, and Chief sheet/view instructions; and produce
+editable intermediary outputs.
+
+Exit: an approved change set can be applied in Chief without flattening.
+
+### Commit E — Watcher, jurisdiction overlays, and final QA
+
+Watch configured local export folders; suppress duplicate hashes; add
+Benton/Washington/city AHJ overlays and remodel classification; compare final
+Chief PDFs with prior evidence; and expose unresolved or professional-review
+exceptions.
+
+Exit: the local loop runs from Chief export through review, approval, handoff,
+and final QA with a complete audit trail.

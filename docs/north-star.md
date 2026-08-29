@@ -21,6 +21,11 @@ The validation and rules engine is secondary. It supports the workflow by
 finding omissions, checking known conditions, and identifying professional
 review items; it does not replace Chief's native modeling capabilities.
 
+The authoritative intake package is a Chief Architect `.caproj` export. It
+contains the native `.plan` and `.layout` files plus project resources. RES
+Works preserves that package unchanged, uses DXF/DWG exports for geometry
+inspection, and uses PDF exports for visual and sheet-level review.
+
 ## What success looks like
 
 For a supported residential project, a designer can:
@@ -33,6 +38,10 @@ For a supported residential project, a designer can:
 6. Approve, edit, reject, or defer every proposed change.
 7. Export the authoritative final permit PDF from Chief Architect.
 8. Run focused QA on that final export and resolve traceable exceptions.
+
+The workflow preserves a complete chain from `.caproj` manifest to native
+files, derived DXF/DWG and PDF snapshots, extracted evidence, approved
+recommendations, and final Chief export.
 
 ## Non-negotiable boundaries
 
