@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .models import DocumentationItem, ProjectManifest, SourceSnapshot
+from .models import DocumentationItem, PdfPageEvidence, ProjectManifest, SourceSnapshot
 
 
 class ProjectRepository:
@@ -22,6 +22,14 @@ class ProjectRepository:
                 manifest_json TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+        self._connection.execute(
+            """CREATE TABLE IF NOT EXISTS page_evidence (
+                snapshot_id TEXT NOT NULL,
+                page_number INTEGER NOT NULL,
+                evidence_json TEXT NOT NULL,
+                PRIMARY KEY(snapshot_id, page_number)
             )"""
         )
         self._connection.execute(
@@ -119,3 +127,24 @@ class ProjectRepository:
             "SELECT snapshot_json FROM source_snapshots WHERE id = ?", (snapshot_id,)
         ).fetchone()
         return SourceSnapshot.model_validate(json.loads(row["snapshot_json"])) if row else None
+
+    def save_page_evidence(self, evidence: PdfPageEvidence) -> None:
+        encoded = json.dumps(
+            evidence.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
+        )
+        self._connection.execute(
+            """INSERT INTO page_evidence(snapshot_id, page_number, evidence_json)
+            VALUES (?, ?, ?)
+            ON CONFLICT(snapshot_id, page_number) DO UPDATE SET
+                evidence_json = excluded.evidence_json""",
+            (evidence.snapshot_id, evidence.page_number, encoded),
+        )
+        self._connection.commit()
+
+    def list_page_evidence(self, snapshot_id: str) -> list[PdfPageEvidence]:
+        rows = self._connection.execute(
+            """SELECT evidence_json FROM page_evidence
+            WHERE snapshot_id = ? ORDER BY page_number""",
+            (snapshot_id,),
+        ).fetchall()
+        return [PdfPageEvidence.model_validate(json.loads(row["evidence_json"])) for row in rows]
