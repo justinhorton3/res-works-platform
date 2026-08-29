@@ -1,0 +1,45 @@
+<script setup>
+import { ref } from 'vue'
+
+const files = ref([])
+const input = ref(null)
+const supported = '.caproj,.plan,.layout,.pdf,.dxf,.dwg'
+
+function addFiles(selected) {
+  files.value.push(...Array.from(selected).map((file) => ({
+    id: `${file.name}-${file.lastModified}`,
+    name: file.name,
+    size: file.size,
+    status: 'Uploading',
+  })))
+  files.value.forEach((file) => { window.setTimeout(() => { file.status = 'Complete' }, 350) })
+}
+
+function removeFile(id) { files.value = files.value.filter((file) => file.id !== id) }
+function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB` }
+</script>
+
+<template>
+  <main class="min-h-screen bg-slate-100 text-slate-950">
+    <header class="border-b border-slate-200 bg-white px-8 py-6">
+      <div class="mx-auto flex max-w-6xl items-center justify-between">
+        <div><div class="text-2xl font-bold">RES Works</div><div class="text-xs tracking-[0.35em] text-slate-400">RES PLAN / LOCAL REVIEW</div></div>
+        <div class="text-sm text-slate-500"><span class="mr-2 text-emerald-500">●</span>Local workspace / Sweeter Build</div>
+      </div>
+    </header>
+    <section class="mx-auto max-w-6xl space-y-8 px-8 py-12">
+      <div><p class="text-xs font-bold tracking-[0.3em] text-slate-400">PROJECT WORKSPACE</p><h1 class="mt-3 text-5xl font-bold tracking-tight">Plan intake &amp; review</h1><p class="mt-4 max-w-3xl text-lg text-slate-500">Import Chief Architect exports, review evidence, and prepare controlled handoff actions. Geometry stays local and Chief remains authoritative.</p></div>
+      <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div class="flex items-start justify-between"><div><h2 class="text-2xl font-bold">1. Add source files</h2><p class="mt-2 text-slate-400">Chief exports, PDFs, CAD evidence, or project data</p></div><span class="text-2xl font-bold text-slate-200">01</span></div>
+        <input ref="input" class="hidden" type="file" :accept="supported" multiple @change="addFiles($event.target.files)">
+        <button class="mt-8 flex min-h-48 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 hover:border-orange-400 hover:bg-orange-50" @click="input.click()" @dragover.prevent @drop.prevent="addFiles($event.dataTransfer.files)">
+          <span class="mb-4 rounded-full bg-orange-100 px-5 py-3 text-3xl text-orange-500">↑</span><span class="text-lg font-semibold">Drop files here or <span class="text-orange-500">browse</span></span><span class="mt-2 text-sm text-slate-400">CAPROJ, PLAN, LAYOUT, PDF, DXF, or DWG · local only</span>
+        </button>
+        <div v-if="files.length" class="mt-5 divide-y divide-slate-200 rounded-2xl border border-slate-200">
+          <div v-for="file in files" :key="file.id" class="flex items-center gap-4 p-4"><div class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500">{{ file.name.split('.').pop().toUpperCase() }}</div><div class="min-w-0 flex-1"><div class="truncate font-semibold">{{ file.name }}</div><div class="text-sm text-slate-400">{{ formatSize(file.size) }} · {{ file.status }}</div></div><button class="text-sm text-slate-400 hover:text-red-500" @click="removeFile(file.id)">Remove</button></div>
+        </div>
+      </section>
+      <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><div class="flex justify-between"><div><h2 class="text-2xl font-bold">2. Review evidence</h2><p class="mt-2 text-slate-400">PDF pages, geometry findings, and documentation recommendations will appear here.</p></div><span class="text-2xl font-bold text-slate-200">02</span></div><div class="mt-8 flex min-h-40 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">No analysis run yet</div></section>
+    </section>
+  </main>
+</template>
