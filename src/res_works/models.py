@@ -272,3 +272,12 @@ class DxfInventory(RESModel):
     entity_counts: dict[str, int] = Field(default_factory=dict)
     dimension_count: int = 0
     text_count: int = 0
+
+
+class DxfEntityRecord(RESModel):
+    handle: str
+    entity_type: str
+    raw_layer: str
+    normalized_layer: str
+    category: str
+    text: str | None = None
