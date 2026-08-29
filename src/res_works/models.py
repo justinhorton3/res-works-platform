@@ -103,6 +103,14 @@ class EvidenceReference(RESModel):
     fact_ids: list[str] = Field(default_factory=list)
 
 
+class PdfPageEvidence(RESModel):
+    snapshot_id: str
+    page_number: int
+    text: str
+    character_count: int
+    has_text: bool
+
+
 class Recommendation(RESModel):
     id: str
     project_id: str
