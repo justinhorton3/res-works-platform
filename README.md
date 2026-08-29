@@ -154,3 +154,5 @@ Before implementing a feature:
 3. preserve neutral printed IDs and hidden source metadata;
 4. add deterministic tests for applicability and validation logic; and
 5. document any action that can write to a Chief project or layout.
+
+text-commit
