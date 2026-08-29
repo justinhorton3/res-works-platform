@@ -5,5 +5,19 @@
     "building_code": "2021 Arkansas Fire Prevention Code",
     "sources": ["arkansas-afpc-2021"],
     "status": "needs_ahj_confirmation"
+  },
+  {
+    "id": "benton-county-baseline",
+    "jurisdiction": "Benton County, Arkansas - baseline pending AHJ confirmation",
+    "building_code": "2021 Arkansas Fire Prevention Code",
+    "sources": ["arkansas-afpc-2021"],
+    "status": "needs_ahj_confirmation"
+  },
+  {
+    "id": "washington-county-baseline",
+    "jurisdiction": "Washington County, Arkansas - baseline pending AHJ confirmation",
+    "building_code": "2021 Arkansas Fire Prevention Code",
+    "sources": ["arkansas-afpc-2021"],
+    "status": "needs_ahj_confirmation"
   }
 ]
