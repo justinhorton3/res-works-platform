@@ -111,6 +111,16 @@ class PdfPageEvidence(RESModel):
     has_text: bool
 
 
+class PageRegion(RESModel):
+    page_number: int
+    x: float
+    y: float
+    width: float
+    height: float
+    label: str
+    source: Literal["manual", "extracted", "inferred"] = "manual"
+
+
 class Recommendation(RESModel):
     id: str
     project_id: str
