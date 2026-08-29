@@ -1,0 +1,26 @@
+[
+  {
+    "id": "sweeter-project-type",
+    "key": "project.type",
+    "value": "residential",
+    "kind": "observed",
+    "source_ref": "SweeterBuild_08.04.26.pdf",
+    "confidence": "high"
+  },
+  {
+    "id": "sweeter-stair-present",
+    "key": "stair.present",
+    "value": true,
+    "kind": "observed",
+    "source_ref": "SweeterBuild_08.04.26.pdf",
+    "confidence": "high"
+  },
+  {
+    "id": "sweeter-sleeping-room",
+    "key": "room.type",
+    "value": "sleeping_room",
+    "kind": "observed",
+    "source_ref": "SweeterBuild_08.04.26.pdf",
+    "confidence": "medium"
+  }
+]
