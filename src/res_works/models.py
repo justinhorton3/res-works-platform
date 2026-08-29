@@ -78,6 +78,19 @@ class ValidationResult(RESModel):
     source_id: str | None = None
 
 
+class ValidationReport(RESModel):
+    project_id: str
+    rule_profile_id: str
+    results: list[ValidationResult] = Field(default_factory=list)
+
+    @property
+    def counts(self) -> dict[str, int]:
+        counts: dict[str, int] = {}
+        for result in self.results:
+            counts[result.status.value] = counts.get(result.status.value, 0) + 1
+        return counts
+
+
 class DocumentationItem(RESModel):
     id: str
     title: str
