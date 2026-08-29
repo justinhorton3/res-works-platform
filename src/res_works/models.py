@@ -62,6 +62,22 @@ class Requirement(RESModel):
     source_id: str | None = None
 
 
+class ValidationStatus(StrEnum):
+    PASS = "pass"
+    FAIL = "fail"
+    NOT_APPLICABLE = "not_applicable"
+    NOT_VERIFIED = "not_verified"
+    PROFESSIONAL_REVIEW_REQUIRED = "professional_review_required"
+
+
+class ValidationResult(RESModel):
+    requirement_id: str
+    status: ValidationStatus
+    message: str
+    evidence_fact_ids: list[str] = Field(default_factory=list)
+    source_id: str | None = None
+
+
 class DocumentationItem(RESModel):
     id: str
     title: str
