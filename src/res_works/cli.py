@@ -54,13 +54,15 @@ def main() -> None:
         source_facts = [ObservedFact.model_validate(item) for item in json.loads(args.facts.read_text())]
         geometry_facts = facts_from_geometry(load_plan_geometry(args.plan), args.project_id)
         facts = list({fact.id: fact for fact in source_facts + geometry_facts}.values())
+        plan = load_plan_geometry(args.plan)
         report = build_validation_report(
             args.project_id,
             "arkansas-baseline",
             load_requirements(args.requirements),
             facts,
+            plan,
         )
-        print(json.dumps({**pdf_report, "fact_count": len(facts), "validation": report.model_dump(mode="json"), "counts": report.counts}, sort_keys=True))
+        print(json.dumps({**pdf_report, "fact_count": len(facts), "geometry_error_count": len(report.geometry_errors), "validation": report.model_dump(mode="json"), "counts": report.counts}, sort_keys=True))
 
 
 if __name__ == "__main__":
