@@ -7,7 +7,7 @@ name = "res-works"
 version = "0.1.0"
 description = "Local-first residential documentation workflow engine"
 requires-python = ">=3.12"
-dependencies = ["pydantic>=2.7,<3"]
+dependencies = ["pydantic>=2.7,<3", "pypdf>=5.0,<7"]
 
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
