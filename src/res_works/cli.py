@@ -6,11 +6,12 @@ from pathlib import Path
 
 from .ingest import ingest_artifact
 from .pdf_review import inventory_pdf
-from .models import ObservedFact
+from .models import DocumentationItem, ObservedFact
 from .fact_mapping import facts_from_geometry
 from .plan_fixture import load_plan_geometry
 from .repository import ProjectRepository
 from .reports import build_validation_report
+from .recommendations import recommend_documentation
 from .rule_catalog import load_requirements
 
 
@@ -46,6 +47,7 @@ def main() -> None:
     project.add_argument("--requirements", type=Path, default=Path("reference/arkansas-baseline-requirements.json"))
     project.add_argument("--facts", type=Path, default=Path("projects/sweeter-build/observed-facts.json"))
     project.add_argument("--plan", type=Path, default=Path("projects/sweeter-build/plan.json"))
+    project.add_argument("--documentation-library", type=Path, default=Path("reference/documentation-library.json"))
     args = parser.parse_args()
     if args.command == "review-pdf":
         print(json.dumps(review_pdf(args.input, args.project_id, args.workspace), sort_keys=True))
@@ -62,7 +64,20 @@ def main() -> None:
             facts,
             plan,
         )
-        print(json.dumps({**pdf_report, "fact_count": len(facts), "geometry_error_count": len(report.geometry_errors), "validation": report.model_dump(mode="json"), "counts": report.counts}, sort_keys=True))
+        documentation = [
+            DocumentationItem.model_validate(item)
+            for item in json.loads(args.documentation_library.read_text())
+        ]
+        recommendations = recommend_documentation(args.project_id, documentation, facts)
+        print(json.dumps({
+            **pdf_report,
+            "fact_count": len(facts),
+            "geometry_error_count": len(report.geometry_errors),
+            "validation": report.model_dump(mode="json"),
+            "counts": report.counts,
+            "recommendation_count": len(recommendations),
+            "recommendations": [item.model_dump(mode="json") for item in recommendations],
+        }, sort_keys=True))
 
 
 if __name__ == "__main__":
