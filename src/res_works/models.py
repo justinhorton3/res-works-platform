@@ -125,6 +125,15 @@ class SourceSnapshot(RESModel):
     extracted_text: str | None = None
 
 
+class AnalysisRun(RESModel):
+    id: str
+    project_id: str
+    source_snapshot_ids: list[str] = Field(default_factory=list)
+    status: Literal["queued", "running", "completed", "failed"] = "queued"
+    report_path: str | None = None
+    recommendation_path: str | None = None
+
+
 class EvidenceReference(RESModel):
     id: str
     snapshot_id: str

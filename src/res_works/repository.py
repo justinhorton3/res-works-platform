@@ -7,6 +7,7 @@ from typing import Any
 
 from .models import (
     CodeSource,
+    AnalysisRun,
     DocumentationItem,
     PdfPageEvidence,
     ProjectManifest,
@@ -59,6 +60,14 @@ class ProjectRepository:
             """CREATE TABLE IF NOT EXISTS source_snapshots (
                 id TEXT PRIMARY KEY,
                 snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+        self._connection.execute(
+            """CREATE TABLE IF NOT EXISTS analysis_runs (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                run_json TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )"""
         )
@@ -150,6 +159,28 @@ class ProjectRepository:
             "SELECT snapshot_json FROM source_snapshots WHERE id = ?", (snapshot_id,)
         ).fetchone()
         return SourceSnapshot.model_validate(json.loads(row["snapshot_json"])) if row else None
+
+    def save_analysis_run(self, run: AnalysisRun) -> None:
+        encoded = json.dumps(run.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+        self._connection.execute(
+            """INSERT INTO analysis_runs(id, project_id, run_json) VALUES (?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET run_json = excluded.run_json""",
+            (run.id, run.project_id, encoded),
+        )
+        self._connection.commit()
+
+    def get_analysis_run(self, run_id: str) -> AnalysisRun | None:
+        row = self._connection.execute(
+            "SELECT run_json FROM analysis_runs WHERE id = ?", (run_id,)
+        ).fetchone()
+        return AnalysisRun.model_validate(json.loads(row["run_json"])) if row else None
+
+    def list_analysis_runs(self, project_id: str) -> list[AnalysisRun]:
+        rows = self._connection.execute(
+            "SELECT run_json FROM analysis_runs WHERE project_id = ? ORDER BY created_at, id",
+            (project_id,),
+        ).fetchall()
+        return [AnalysisRun.model_validate(json.loads(row["run_json"])) for row in rows]
 
     def save_page_evidence(self, evidence: PdfPageEvidence) -> None:
         encoded = json.dumps(
