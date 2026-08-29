@@ -7,6 +7,15 @@ operational documentation for RES Works.
 
 - [Use cases and requirements](use-cases.md) - authoritative MVP behaviors,
   boundaries, and acceptance criteria.
+- [North Star](north-star.md) - product goal, success definition, and decision
+  test for implementation work.
+- [Core processes](core-processes.md) - file watching, validation,
+  recommendations, approval, and final QA workflow.
+- [Arkansas residential code sources](arkansas-residential-code-sources.md) -
+  statewide, Benton County, Washington County, and repository code-library
+  source registry.
+- [Execution plan](execution-plan.md) - product order, phases, deliverables,
+  acceptance criteria, and first implementation sprint.
 
 ## Planned documents
 
