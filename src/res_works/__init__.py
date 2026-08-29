@@ -10,5 +10,6 @@ from .rule_catalog import load_requirements
 from .reports import build_validation_report
 from .geometry import validate_geometry
 from .plan_fixture import load_plan_geometry
+from .fact_mapping import facts_from_geometry
 
-__all__ = ["ProjectManifest", "ProjectRepository", "ingest_artifact", "inventory_pdf", "render_pdf_pages", "evaluate_requirement", "evaluate_requirements", "load_requirements", "build_validation_report", "validate_geometry", "load_plan_geometry"]
+__all__ = ["ProjectManifest", "ProjectRepository", "ingest_artifact", "inventory_pdf", "render_pdf_pages", "evaluate_requirement", "evaluate_requirements", "load_requirements", "build_validation_report", "validate_geometry", "load_plan_geometry", "facts_from_geometry"]
