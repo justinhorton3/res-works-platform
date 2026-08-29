@@ -84,6 +84,25 @@ class ObservedFact(RESModel):
     confidence: Literal["high", "medium", "low", "unknown"] = "unknown"
 
 
+class SourceSnapshot(RESModel):
+    id: str
+    project_id: str
+    filename: str
+    media_type: str
+    sha256: str
+    byte_size: int
+    page_count: int | None = None
+    extracted_text: str | None = None
+
+
+class EvidenceReference(RESModel):
+    id: str
+    snapshot_id: str
+    locator: str
+    description: str
+    fact_ids: list[str] = Field(default_factory=list)
+
+
 class Recommendation(RESModel):
     id: str
     project_id: str
