@@ -82,6 +82,7 @@ class ValidationReport(RESModel):
     project_id: str
     rule_profile_id: str
     results: list[ValidationResult] = Field(default_factory=list)
+    geometry_errors: list[str] = Field(default_factory=list)
 
     @property
     def counts(self) -> dict[str, int]:
