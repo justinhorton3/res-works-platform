@@ -1,0 +1,26 @@
+{
+  "envelope": {"x": 0, "y": 0, "width": 101.58, "depth": 54.0},
+  "rooms": [
+    {"id": "garage", "name": "2-Car Garage", "kind": "garage", "geometry": {"x": 51.58, "y": 0, "width": 50.0, "depth": 24.0}},
+    {"id": "kitchen-dining", "name": "Kitchen / Dining", "kind": "kitchen", "geometry": {"x": 51.58, "y": 24.0, "width": 25.0, "depth": 16.0}},
+    {"id": "great-room", "name": "Great Room", "kind": "living_room", "geometry": {"x": 0, "y": 24.0, "width": 51.58, "depth": 30.0}},
+    {"id": "primary-bedroom", "name": "Primary Bedroom", "kind": "sleeping_room", "geometry": {"x": 76.58, "y": 24.0, "width": 25.0, "depth": 16.0}},
+    {"id": "primary-bath", "name": "Primary Bath", "kind": "bathroom", "geometry": {"x": 76.58, "y": 40.0, "width": 13.0, "depth": 14.0}},
+    {"id": "laundry", "name": "Laundry / Mudroom", "kind": "laundry", "geometry": {"x": 63.58, "y": 40.0, "width": 13.0, "depth": 14.0}},
+    {"id": "primary-closet", "name": "Primary Closet", "kind": "closet", "geometry": {"x": 89.58, "y": 40.0, "width": 12.0, "depth": 14.0}}
+  ],
+  "walls": [
+    {"id": "north", "start_x": 0, "start_y": 0, "end_x": 101.58, "end_y": 0, "thickness": 0.5, "exterior": true},
+    {"id": "south", "start_x": 0, "start_y": 54, "end_x": 101.58, "end_y": 54, "thickness": 0.5, "exterior": true}
+  ],
+  "openings": [
+    {"id": "garage-entry", "kind": "door", "wall_id": "north", "offset": 60, "width": 3},
+    {"id": "balcony-door", "kind": "door", "wall_id": "south", "offset": 20, "width": 6}
+  ],
+  "stairs": [
+    {"id": "main-stair", "geometry": {"x": 45.58, "y": 30.0, "width": 4.0, "depth": 14.0}, "width": 4.0}
+  ],
+  "porches": [
+    {"x": 0, "y": 54, "width": 51.58, "depth": 8.0}
+  ]
+}
