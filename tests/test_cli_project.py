@@ -25,3 +25,5 @@ def test_review_project_command_combines_pdf_and_validation(tmp_path: Path) -> N
     assert report["fact_count"] == 7
     assert report["counts"]["not_verified"] == 3
     assert report["counts"].get("pass", 0) == 0
+    assert report["recommendation_count"] == 1
+    assert report["recommendations"][0]["documentation_item_id"] == "callout-egress-review"
