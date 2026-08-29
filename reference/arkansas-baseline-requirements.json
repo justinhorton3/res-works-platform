@@ -1,0 +1,42 @@
+[
+  {
+    "id": "sleeping-room-egress-review",
+    "rule_profile_id": "arkansas-baseline",
+    "title": "Sleeping-room emergency escape review",
+    "level": "must",
+    "trigger": "room.type=sleeping_room",
+    "requirement": "Confirm required emergency escape and rescue opening evidence.",
+    "evidence_required": ["window.clear_opening", "window.sill_height"],
+    "source_id": "arkansas-afpc-2021"
+  },
+  {
+    "id": "stair-width-review",
+    "rule_profile_id": "arkansas-baseline",
+    "title": "Stair geometry review",
+    "level": "must",
+    "trigger": "stair.present=true",
+    "requirement": "Confirm stair width, riser, tread, landing, and headroom evidence.",
+    "evidence_required": ["stair.width", "stair.riser", "stair.tread", "stair.headroom"],
+    "source_id": "arkansas-afpc-2021"
+  },
+  {
+    "id": "smoke-co-alarm-review",
+    "rule_profile_id": "arkansas-baseline",
+    "title": "Smoke and carbon-monoxide alarm review",
+    "level": "must",
+    "trigger": "project.type=residential",
+    "requirement": "Confirm required smoke and carbon-monoxide alarm locations.",
+    "evidence_required": ["alarm.smoke_locations", "alarm.co_locations"],
+    "source_id": "arkansas-afpc-2021"
+  },
+  {
+    "id": "trade-scope-review",
+    "rule_profile_id": "arkansas-baseline",
+    "title": "Trade-scope review",
+    "level": "should",
+    "trigger": "project.type=residential",
+    "requirement": "Confirm plumbing, mechanical, fuel gas, electrical, and energy scopes.",
+    "evidence_required": ["trade.scope_confirmation"],
+    "source_id": "arkansas-afpc-2021"
+  }
+]
