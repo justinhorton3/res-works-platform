@@ -6,7 +6,10 @@ from pathlib import Path
 
 from .ingest import ingest_artifact
 from .pdf_review import inventory_pdf
+from .models import ObservedFact
 from .repository import ProjectRepository
+from .reports import build_validation_report
+from .rule_catalog import load_requirements
 
 
 def review_pdf(input_path: str | Path, project_id: str, workspace: str | Path) -> dict[str, object]:
@@ -34,9 +37,25 @@ def main() -> None:
     review.add_argument("input", type=Path)
     review.add_argument("--project-id", required=True)
     review.add_argument("--workspace", type=Path, default=Path("storage"))
+    project = subparsers.add_parser("review-project", help="review a PDF against a rule catalog")
+    project.add_argument("input", type=Path)
+    project.add_argument("--project-id", required=True)
+    project.add_argument("--workspace", type=Path, default=Path("storage"))
+    project.add_argument("--requirements", type=Path, default=Path("reference/arkansas-baseline-requirements.json"))
+    project.add_argument("--facts", type=Path, default=Path("projects/sweeter-build/observed-facts.json"))
     args = parser.parse_args()
     if args.command == "review-pdf":
         print(json.dumps(review_pdf(args.input, args.project_id, args.workspace), sort_keys=True))
+    elif args.command == "review-project":
+        pdf_report = review_pdf(args.input, args.project_id, args.workspace)
+        facts = [ObservedFact.model_validate(item) for item in json.loads(args.facts.read_text())]
+        report = build_validation_report(
+            args.project_id,
+            "arkansas-baseline",
+            load_requirements(args.requirements),
+            facts,
+        )
+        print(json.dumps({**pdf_report, "validation": report.model_dump(mode="json"), "counts": report.counts}, sort_keys=True))
 
 
 if __name__ == "__main__":
