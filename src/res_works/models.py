@@ -263,3 +263,12 @@ class CaprojInventory(RESModel):
     resource_count: int = 0
     export_errors: list[str] = Field(default_factory=list)
     missing_resources: list[str] = Field(default_factory=list)
+
+
+class DxfInventory(RESModel):
+    filename: str
+    units: int | None = None
+    layers: list[str] = Field(default_factory=list)
+    entity_counts: dict[str, int] = Field(default_factory=dict)
+    dimension_count: int = 0
+    text_count: int = 0
