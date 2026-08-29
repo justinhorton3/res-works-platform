@@ -5,7 +5,15 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .models import DocumentationItem, PdfPageEvidence, ProjectManifest, SourceSnapshot
+from .models import (
+    CodeSource,
+    DocumentationItem,
+    PdfPageEvidence,
+    ProjectManifest,
+    Requirement,
+    RuleProfile,
+    SourceSnapshot,
+)
 
 
 class ProjectRepository:
@@ -22,6 +30,21 @@ class ProjectRepository:
                 manifest_json TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+        self._connection.execute(
+            """CREATE TABLE IF NOT EXISTS code_sources (
+                id TEXT PRIMARY KEY, source_json TEXT NOT NULL
+            )"""
+        )
+        self._connection.execute(
+            """CREATE TABLE IF NOT EXISTS rule_profiles (
+                id TEXT PRIMARY KEY, profile_json TEXT NOT NULL
+            )"""
+        )
+        self._connection.execute(
+            """CREATE TABLE IF NOT EXISTS requirements (
+                id TEXT PRIMARY KEY, requirement_json TEXT NOT NULL
             )"""
         )
         self._connection.execute(
@@ -148,3 +171,50 @@ class ProjectRepository:
             (snapshot_id,),
         ).fetchall()
         return [PdfPageEvidence.model_validate(json.loads(row["evidence_json"])) for row in rows]
+
+    def save_code_source(self, source: CodeSource) -> None:
+        self._save_record("code_sources", source.id, source.model_dump(mode="json"))
+
+    def get_code_source(self, source_id: str) -> CodeSource | None:
+        value = self._get_record("code_sources", source_id)
+        return CodeSource.model_validate(value) if value else None
+
+    def save_rule_profile(self, profile: RuleProfile) -> None:
+        self._save_record("rule_profiles", profile.id, profile.model_dump(mode="json"))
+
+    def get_rule_profile(self, profile_id: str) -> RuleProfile | None:
+        value = self._get_record("rule_profiles", profile_id)
+        return RuleProfile.model_validate(value) if value else None
+
+    def save_requirement(self, requirement: Requirement) -> None:
+        self._save_record("requirements", requirement.id, requirement.model_dump(mode="json"))
+
+    def get_requirement(self, requirement_id: str) -> Requirement | None:
+        value = self._get_record("requirements", requirement_id)
+        return Requirement.model_validate(value) if value else None
+
+    def _save_record(self, table: str, record_id: str, value: dict[str, Any]) -> None:
+        columns = {
+            "code_sources": "source_json",
+            "rule_profiles": "profile_json",
+            "requirements": "requirement_json",
+        }
+        column = columns[table]
+        encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+        self._connection.execute(
+            f"INSERT INTO {table}(id, {column}) VALUES (?, ?) "
+            f"ON CONFLICT(id) DO UPDATE SET {column} = excluded.{column}",
+            (record_id, encoded),
+        )
+        self._connection.commit()
+
+    def _get_record(self, table: str, record_id: str) -> dict[str, Any] | None:
+        column = {
+            "code_sources": "source_json",
+            "rule_profiles": "profile_json",
+            "requirements": "requirement_json",
+        }[table]
+        row = self._connection.execute(
+            f"SELECT {column} FROM {table} WHERE id = ?", (record_id,)
+        ).fetchone()
+        return json.loads(row[column]) if row else None
