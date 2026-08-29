@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from .models import DocumentationItem, ProjectManifest
+from .models import DocumentationItem, ProjectManifest, SourceSnapshot
 
 
 class ProjectRepository:
@@ -22,6 +22,13 @@ class ProjectRepository:
                 manifest_json TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+        self._connection.execute(
+            """CREATE TABLE IF NOT EXISTS source_snapshots (
+                id TEXT PRIMARY KEY,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )"""
         )
         self._connection.execute(
@@ -96,3 +103,19 @@ class ProjectRepository:
             DocumentationItem.model_validate(json.loads(row["item_json"]))
             for row in rows
         ]
+
+    def save_snapshot(self, snapshot: SourceSnapshot) -> None:
+        encoded = json.dumps(
+            snapshot.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
+        )
+        self._connection.execute(
+            "INSERT OR IGNORE INTO source_snapshots(id, snapshot_json) VALUES (?, ?)",
+            (snapshot.id, encoded),
+        )
+        self._connection.commit()
+
+    def get_snapshot(self, snapshot_id: str) -> SourceSnapshot | None:
+        row = self._connection.execute(
+            "SELECT snapshot_json FROM source_snapshots WHERE id = ?", (snapshot_id,)
+        ).fetchone()
+        return SourceSnapshot.model_validate(json.loads(row["snapshot_json"])) if row else None
