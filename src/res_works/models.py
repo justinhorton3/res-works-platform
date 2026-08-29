@@ -180,3 +180,72 @@ class ProjectManifest(RESModel):
     documentation_item_ids: list[str] = Field(default_factory=list)
     created_on: date = Field(default_factory=date.today)
     schema_version: str = "0.1"
+
+
+class Rect(RESModel):
+    x: float
+    y: float
+    width: float = Field(gt=0)
+    depth: float = Field(gt=0)
+
+    @property
+    def area(self) -> float:
+        return self.width * self.depth
+
+    def contains(self, other: "Rect") -> bool:
+        return (
+            other.x >= self.x
+            and other.y >= self.y
+            and other.x + other.width <= self.x + self.width
+            and other.y + other.depth <= self.y + self.depth
+        )
+
+    def overlaps(self, other: "Rect") -> bool:
+        return not (
+            self.x + self.width <= other.x
+            or other.x + other.width <= self.x
+            or self.y + self.depth <= other.y
+            or other.y + other.depth <= self.y
+        )
+
+
+class Room(RESModel):
+    id: str
+    name: str
+    kind: str
+    geometry: Rect
+
+
+class Wall(RESModel):
+    id: str
+    start_x: float
+    start_y: float
+    end_x: float
+    end_y: float
+    thickness: float = Field(gt=0)
+    exterior: bool = False
+
+
+class Opening(RESModel):
+    id: str
+    kind: Literal["door", "window"]
+    wall_id: str
+    offset: float = Field(ge=0)
+    width: float = Field(gt=0)
+
+
+class Stair(RESModel):
+    id: str
+    geometry: Rect
+    width: float = Field(gt=0)
+    riser: float | None = Field(default=None, gt=0)
+    tread: float | None = Field(default=None, gt=0)
+
+
+class PlanGeometry(RESModel):
+    envelope: Rect
+    rooms: list[Room] = Field(default_factory=list)
+    walls: list[Wall] = Field(default_factory=list)
+    openings: list[Opening] = Field(default_factory=list)
+    stairs: list[Stair] = Field(default_factory=list)
+    porches: list[Rect] = Field(default_factory=list)
