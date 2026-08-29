@@ -171,6 +171,23 @@ class ChangeSet(RESModel):
     status: Literal["draft", "submitted", "approved", "rejected"] = "draft"
 
 
+class ApprovalDecision(RESModel):
+    recommendation_id: str
+    decision: Literal["approve", "reject", "defer", "request_clarification"]
+    note: str | None = None
+    decided_by: str
+
+
+class ChiefHandoff(RESModel):
+    project_id: str
+    change_set_id: str
+    source_snapshot_id: str
+    chief_version: str = "X18"
+    instructions: list[str] = Field(default_factory=list)
+    recommendation_ids: list[str] = Field(default_factory=list)
+    native_write_performed: bool = False
+
+
 class ProjectManifest(RESModel):
     id: str
     name: str

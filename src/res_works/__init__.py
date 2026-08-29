@@ -16,5 +16,6 @@ from .dxf_compare import compare_plan_to_dxf
 from .recommendations import recommend_documentation
 from .plan_fixture import load_plan_geometry
 from .fact_mapping import facts_from_geometry
+from .handoff import apply_decisions, build_change_set, build_chief_handoff
 
-__all__ = ["ProjectManifest", "ProjectRepository", "ingest_artifact", "inventory_pdf", "render_pdf_pages", "evaluate_requirement", "evaluate_requirements", "load_requirements", "build_validation_report", "validate_geometry", "load_plan_geometry", "facts_from_geometry", "inventory_caproj", "inventory_dxf", "extract_architectural_entities", "normalize_layer", "compare_plan_to_dxf", "recommend_documentation"]
+__all__ = ["ProjectManifest", "ProjectRepository", "ingest_artifact", "inventory_pdf", "render_pdf_pages", "evaluate_requirement", "evaluate_requirements", "load_requirements", "build_validation_report", "validate_geometry", "load_plan_geometry", "facts_from_geometry", "inventory_caproj", "inventory_dxf", "extract_architectural_entities", "normalize_layer", "compare_plan_to_dxf", "recommend_documentation", "apply_decisions", "build_change_set", "build_chief_handoff"]
