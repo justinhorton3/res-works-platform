@@ -12,7 +12,8 @@ from .geometry import validate_geometry
 from .caproj import inventory_caproj
 from .dxf import inventory_dxf
 from .dxf_extract import extract_architectural_entities, normalize_layer
+from .dxf_compare import compare_plan_to_dxf
 from .plan_fixture import load_plan_geometry
 from .fact_mapping import facts_from_geometry
 
-__all__ = ["ProjectManifest", "ProjectRepository", "ingest_artifact", "inventory_pdf", "render_pdf_pages", "evaluate_requirement", "evaluate_requirements", "load_requirements", "build_validation_report", "validate_geometry", "load_plan_geometry", "facts_from_geometry", "inventory_caproj", "inventory_dxf", "extract_architectural_entities", "normalize_layer"]
+__all__ = ["ProjectManifest", "ProjectRepository", "ingest_artifact", "inventory_pdf", "render_pdf_pages", "evaluate_requirement", "evaluate_requirements", "load_requirements", "build_validation_report", "validate_geometry", "load_plan_geometry", "facts_from_geometry", "inventory_caproj", "inventory_dxf", "extract_architectural_entities", "normalize_layer", "compare_plan_to_dxf"]

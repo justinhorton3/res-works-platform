@@ -281,3 +281,11 @@ class DxfEntityRecord(RESModel):
     normalized_layer: str
     category: str
     text: str | None = None
+
+
+class DxfPlanComparison(RESModel):
+    plan_id: str
+    dxf_filename: str
+    plan_categories: list[str] = Field(default_factory=list)
+    dxf_categories: dict[str, int] = Field(default_factory=dict)
+    findings: list[str] = Field(default_factory=list)
