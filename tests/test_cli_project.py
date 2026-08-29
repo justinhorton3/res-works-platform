@@ -22,5 +22,6 @@ def test_review_project_command_combines_pdf_and_validation(tmp_path: Path) -> N
     )
     report = json.loads(result.stdout)
     assert report["pages"] == 1
+    assert report["fact_count"] == 7
     assert report["counts"]["not_verified"] == 3
     assert report["counts"].get("pass", 0) == 0
