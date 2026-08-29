@@ -29,6 +29,25 @@ Chief edit
   -> final QA and exception report
 ```
 
+## 1.1 Chief project package and derived exports
+
+The preferred intake is a Chief Architect `.caproj` export. It is a ZIP-based
+project package containing a manifest, native `.plan` and `.layout` files, and
+resources. RES Works preserves the package as an immutable source record.
+
+| Artifact | Role | Authority |
+| --- | --- | --- |
+| `.caproj` | Complete project package and provenance | Authoritative archive |
+| `.plan` | Native architectural model | Chief source of truth |
+| `.layout` | Native sheets and layout | Chief source of truth |
+| `.dxf` / `.dwg` | Layer/entity/dimension geometry inspection | Derived analysis input |
+| `.pdf` | Visual, sheet, note, and dimension review | Derived verification input |
+
+The intake records the package manifest, contained files, sizes, hashes,
+export errors, missing resources, and artifact relationships. Native files are
+never edited by intake. A DXF/DWG discrepancy is a review finding, not
+permission to rewrite the `.plan`.
+
 ## 2. File-watching workflow
 
 ### 2.1 Watched inputs
