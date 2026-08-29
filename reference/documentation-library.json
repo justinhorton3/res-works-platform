@@ -1,0 +1,24 @@
+[
+  {
+    "id": "note-existing-conditions",
+    "title": "Existing conditions",
+    "text": "Verify existing conditions in the field before construction.",
+    "category": "general_note",
+    "source_ids": ["internal-standard-001"],
+    "applies_when": ["project.type=remodel"],
+    "revision": "1",
+    "approval_status": "draft",
+    "professional_review_required": true
+  },
+  {
+    "id": "callout-egress-review",
+    "title": "Egress review",
+    "text": "Confirm required emergency escape and rescue openings are documented.",
+    "category": "callout",
+    "source_ids": ["arkansas-afpc-2021"],
+    "applies_when": ["room.type=sleeping_room"],
+    "revision": "1",
+    "approval_status": "draft",
+    "professional_review_required": true
+  }
+]

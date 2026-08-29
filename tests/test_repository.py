@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from res_works.models import ProjectManifest
+from res_works.models import ApprovalStatus, DocumentationItem, ProjectManifest
 from res_works.repository import ProjectRepository
 
 
@@ -39,4 +39,41 @@ def test_missing_project_returns_none(tmp_path: Path) -> None:
     repository = ProjectRepository(tmp_path / "res-works.sqlite3")
     assert repository.get_project("missing") is None
     assert repository.export_project("missing") is None
+    repository.close()
+
+
+def test_documentation_library_round_trips_controlled_item(tmp_path: Path) -> None:
+    repository = ProjectRepository(tmp_path / "res-works.sqlite3")
+    item = DocumentationItem(
+        id="note-existing-conditions",
+        title="Existing conditions",
+        text="Verify existing conditions in the field before construction.",
+        category="general_note",
+        source_ids=["internal-standard-001"],
+        applies_when=["project.type=remodel"],
+        revision="2",
+        approval_status=ApprovalStatus.APPROVED,
+        professional_review_required=True,
+    )
+
+    repository.save_documentation_item(item)
+
+    assert repository.get_documentation_item(item.id) == item
+    assert repository.list_documentation_items() == [item]
+    repository.close()
+
+
+def test_documentation_item_update_does_not_create_duplicate(tmp_path: Path) -> None:
+    repository = ProjectRepository(tmp_path / "res-works.sqlite3")
+    first = DocumentationItem(
+        id="callout-1", title="First", text="One", category="callout"
+    )
+    second = first.model_copy(update={"title": "Revised", "revision": "2"})
+
+    repository.save_documentation_item(first)
+    repository.save_documentation_item(second)
+
+    items = repository.list_documentation_items()
+    assert len(items) == 1
+    assert items[0].title == "Revised"
     repository.close()
