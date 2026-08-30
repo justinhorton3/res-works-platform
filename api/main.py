@@ -85,7 +85,7 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         inventory = inventory_caproj(source)
         extracted = extract_native_files(source, WORKSPACE / "extracted" / project_id / snapshot.id)
         facts = [ObservedFact(id="fact-chief-package", key="chief.package", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
-        result = {"message": "Chief package extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "fact_count": len(facts), "recommendations": recommendations_for_facts(project_id, facts)}
+        result = {"message": "Chief package inventoried; additional exports required for analysis", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dxf":
         inventory = inventory_dxf(source)
         entities = extract_architectural_entities(source)
