@@ -12,6 +12,12 @@ const evidencePages = ref([])
 const sourceUrl = ref('')
 const decisions = ref({})
 const selectedJurisdiction = ref('arkansas-baseline')
+const companionChecklist = computed(() => {
+  const coverage = analysis.value?.result?.evidence_coverage
+  if (!coverage) return []
+  const labels = { geometry: ['Geometry export', 'Export All Floors (DXF/DWG)'], visual: ['Verification PDF', 'Export PDF'], schedules: ['Schedules', 'PDF or schedule export'], energy: ['Energy evidence', 'Thermal Envelope Data or RESCheck'] }
+  return Object.entries(coverage).map(([kind, item]) => ({ kind, ...(labels[kind] || [kind, 'Chief export']), ...item }))
+})
 const reviewSummary = computed(() => {
   const result = analysis.value?.result
   if (!result) return null
@@ -140,6 +146,10 @@ function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB
     <section class="mx-auto max-w-6xl space-y-8 px-8 py-12">
       <div><p class="text-xs font-bold tracking-[0.3em] text-slate-400">PROJECT WORKSPACE</p><h1 class="mt-3 text-5xl font-bold tracking-tight">Plan intake &amp; review</h1><p class="mt-4 max-w-3xl text-lg text-slate-500">Import Chief Architect exports, review evidence, and prepare controlled handoff actions. Geometry stays local and Chief remains authoritative.</p></div>
       <JurisdictionPanel @change="selectedJurisdiction = $event" />
+      <section v-if="companionChecklist.length" aria-label="Companion evidence checklist" class="rounded-3xl border border-amber-200 bg-amber-50 p-8 shadow-sm">
+        <div class="flex items-start justify-between"><div><h2 class="text-2xl font-bold text-amber-950">Companion evidence checklist</h2><p class="mt-2 text-amber-900">These exports determine what RES can verify. Missing evidence is not a code failure.</p></div><span class="text-2xl font-bold text-amber-300">01A</span></div>
+        <div class="mt-5 grid gap-3 md:grid-cols-2"><div v-for="item in companionChecklist" :key="item.kind" class="rounded-xl bg-white p-4"><div class="flex items-center justify-between"><span class="font-semibold text-slate-800">{{ item[0] }}</span><span class="text-xs font-bold uppercase" :class="item.status === 'available' ? 'text-emerald-700' : 'text-amber-700'">{{ item.status }}</span></div><p class="mt-1 text-sm text-slate-500">{{ item[1] }}</p><p v-if="item.sources?.length" class="mt-2 text-xs text-slate-500">{{ item.sources.join(', ') }}</p></div></div>
+      </section>
       <section v-if="reviewSummary" aria-label="Review summary" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <div class="flex items-start justify-between"><div><h2 class="text-2xl font-bold">What needs attention</h2><p class="mt-2 text-slate-500">A decision-oriented summary of this analysis run.</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-500">Next action</span></div>
         <p class="mt-5 rounded-xl bg-orange-50 p-4 font-semibold text-orange-900">{{ reviewSummary.nextAction }}</p>
