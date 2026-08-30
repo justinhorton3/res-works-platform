@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const files = ref([])
 const input = ref(null)
@@ -10,6 +10,18 @@ const apiError = ref('')
 const evidencePages = ref([])
 const sourceUrl = ref('')
 const decisions = ref({})
+
+async function loadLatestAnalysis() {
+  const response = await fetch(`${apiBase}/projects/sweeter-build/runs`)
+  if (!response.ok) return
+  const runs = await response.json()
+  if (!runs.length) return
+  analysis.value = runs[runs.length - 1]
+  evidencePages.value = analysis.value.result?.evidence || []
+  if (evidencePages.value.length) sourceUrl.value = `${apiBase}/projects/sweeter-build/snapshots/${analysis.value.source_snapshot_ids[0]}/source`
+}
+
+onMounted(loadLatestAnalysis)
 
 async function addFiles(selected) {
   for (const file of Array.from(selected)) {

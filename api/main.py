@@ -120,3 +120,11 @@ def get_analysis(project_id: str, run_id: str) -> AnalysisRun:
     if run is None or run.project_id != project_id:
         raise HTTPException(status_code=404, detail="Analysis run not found")
     return run
+
+
+@app.get("/projects/{project_id}/runs")
+def list_analyses(project_id: str) -> list[AnalysisRun]:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    runs = repository.list_analysis_runs(project_id)
+    repository.close()
+    return runs
