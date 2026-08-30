@@ -8,6 +8,7 @@ from typing import Any
 from .models import (
     CodeSource,
     AnalysisRun,
+    ApprovalDecision,
     DocumentationItem,
     PdfPageEvidence,
     ProjectManifest,
@@ -71,6 +72,7 @@ class ProjectRepository:
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )"""
         )
+        self._connection.execute("CREATE TABLE IF NOT EXISTS approval_decisions (recommendation_id TEXT PRIMARY KEY, decision_json TEXT NOT NULL)")
         self._connection.execute(
             """CREATE TABLE IF NOT EXISTS documentation_items (
                 id TEXT PRIMARY KEY,
@@ -181,6 +183,10 @@ class ProjectRepository:
             (project_id,),
         ).fetchall()
         return [AnalysisRun.model_validate(json.loads(row["run_json"])) for row in rows]
+
+    def save_approval_decision(self, decision: ApprovalDecision) -> None:
+        self._connection.execute("INSERT INTO approval_decisions(recommendation_id, decision_json) VALUES (?, ?) ON CONFLICT(recommendation_id) DO UPDATE SET decision_json=excluded.decision_json", (decision.recommendation_id, json.dumps(decision.model_dump(mode="json"), sort_keys=True)))
+        self._connection.commit()
 
     def save_page_evidence(self, evidence: PdfPageEvidence) -> None:
         encoded = json.dumps(
