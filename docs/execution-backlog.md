@@ -66,7 +66,8 @@ and end-to-end acceptance remain incomplete.
   **Done:** indexed PDF page references are returned with snapshot identity;
   visual-only conclusions remain explicitly unverified.
 - **M3.5** As a reviewer, I can inspect a usable plan preview. **Done:** the
-  preview preserves scale/orientation and clearly labels unsupported geometry.
+  SVG preserves source aspect ratio, coordinates, units metadata, and source
+  layer/handle titles for traceable linework.
 
 ### M4 — Documentation intelligence
 
@@ -167,5 +168,5 @@ underlying architectural analysis is complete.
 
 ## Next grouped delivery
 
-Next grouped delivery: complete M3.5 with a scale-preserving, source-linked
-plan preview and then use it in the Lot 27 acceptance workflow.
+Next grouped delivery: complete M7.1–M7.3 with Docker-backed watcher dispatch
+and a full real-source Lot 27 acceptance workflow.

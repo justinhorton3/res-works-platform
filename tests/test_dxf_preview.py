@@ -17,3 +17,6 @@ def test_render_dxf_preview_creates_svg_with_geometry_and_labels(tmp_path: Path)
     assert "<svg" in svg
     assert "Kitchen" in svg
     assert "<line" in svg
+    assert 'data-source="plan.dxf"' in svg
+    assert 'data-handle=' in svg
+    assert "vector-effect=\"non-scaling-stroke\"" in svg
