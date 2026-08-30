@@ -20,6 +20,19 @@ _CATEGORIES = {
 }
 
 
+def _feet_inches(value: float | None, units: int | None) -> str | None:
+    if value is None:
+        return None
+    factors = {2: 1 / 12, 3: 1, 4: 0.00328084, 5: 3.28084, 6: 3.28084}
+    feet = value * factors.get(units or 0, 1)
+    whole = int(abs(feet))
+    inches = round((abs(feet) - whole) * 12)
+    if inches == 12:
+        whole, inches = whole + 1, 0
+    sign = "-" if feet < 0 else ""
+    return f'{sign}{whole}\'- {inches}"'
+
+
 def normalize_layer(layer: str) -> str:
     return re.sub(r"-\d+$", "", layer)
 
@@ -34,6 +47,7 @@ def _category(layer: str) -> str | None:
 
 def extract_architectural_entities(path: str | Path) -> list[DxfEntityRecord]:
     document = ezdxf.readfile(path)
+    units = document.header.get("$INSUNITS")
     records: list[DxfEntityRecord] = []
     for entity in document.modelspace():
         category = _category(entity.dxf.layer)
@@ -75,5 +89,5 @@ def summarize_dxf_evidence(path: str | Path) -> dict[str, object]:
             measurement = float(entity.get_measurement())
         except (AttributeError, TypeError, ValueError):
             measurement = None
-        dimensions.append({"handle": entity.dxf.handle, "layer": entity.dxf.layer, "measurement": measurement, "display_text": getattr(entity.dxf, "text", "") or ""})
+        dimensions.append({"handle": entity.dxf.handle, "layer": entity.dxf.layer, "measurement": measurement, "normalized": _feet_inches(measurement, int(units) if units is not None else None), "orientation": int(entity.dxf.dimtype) & 7, "display_text": getattr(entity.dxf, "text", "") or ""})
     return {"entity_count": len(records), "categories": dict(sorted(categories.items())), "text_samples": text_samples, "dimensions": dimensions}
