@@ -23,6 +23,7 @@ from res_works.reports import build_validation_report
 from res_works.rule_catalog import load_requirements, requirements_for_profile
 from res_works.jurisdiction import classify_project, load_rule_profiles, profile_scope, resolve_rule_profile
 from res_works.pdf_review import inventory_pdf
+from res_works.pdf_render import render_pdf_pages
 from res_works.repository import ProjectRepository
 from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_html
 
@@ -78,7 +79,8 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
                 repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
                 repository.save_page_evidence(page)
                 repository.close()
-            pdfs.append({"snapshot_id": item.id, "filename": item.filename, "pages": len(pages), "text_pages": sum(page.has_text for page in pages), "page_references": [{"page_number": page.page_number, "snapshot_id": page.snapshot_id, "locator": f"page {page.page_number}"} for page in pages]})
+            rendered_pages = render_pdf_pages(source, item, WORKSPACE / "previews" / project_id)
+            pdfs.append({"snapshot_id": item.id, "filename": item.filename, "pages": len(pages), "text_pages": sum(page.has_text for page in pages), "page_references": [{"page_number": page.page_number, "snapshot_id": page.snapshot_id, "locator": f"page {page.page_number}"} for page in pages], "page_previews": [{"page_number": index + 1, "url": f"/projects/{project_id}/snapshots/{item.id}/pages/{index + 1}/preview"} for index in range(len(rendered_pages))]})
             if not any(page.has_text for page in pages):
                 findings.append({"severity": "info", "message": "PDF has no extractable text; visual page review is required.", "source_snapshot_id": item.id, "source_filename": item.filename})
     if geometry and not pdfs:
@@ -294,6 +296,22 @@ def get_preview(project_id: str, snapshot_id: str) -> FileResponse:
         source = WORKSPACE / "incoming" / project_id / snapshot.filename
         render_dxf_preview(source, preview)
     return FileResponse(preview, media_type="image/svg+xml", filename=f"{Path(snapshot.filename).stem}.svg")
+
+
+@app.get("/projects/{project_id}/snapshots/{snapshot_id}/pages/{page_number}/preview")
+def get_pdf_page_preview(project_id: str, snapshot_id: str, page_number: int) -> FileResponse:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    snapshot = repository.get_snapshot(snapshot_id)
+    repository.close()
+    if snapshot is None or snapshot.project_id != project_id or not snapshot.filename.lower().endswith(".pdf") or page_number < 1:
+        raise HTTPException(status_code=404, detail="PDF page preview not found")
+    preview = WORKSPACE / "previews" / project_id / snapshot_id / f"page-{page_number:03d}.png"
+    if not preview.is_file():
+        source = WORKSPACE / "incoming" / project_id / snapshot.filename
+        rendered = render_pdf_pages(source, snapshot, WORKSPACE / "previews" / project_id)
+        if page_number > len(rendered):
+            raise HTTPException(status_code=404, detail="PDF page preview not found")
+    return FileResponse(preview, media_type="image/png", filename=f"{Path(snapshot.filename).stem}-page-{page_number}.png")
 
 
 @app.get("/projects/{project_id}/runs/{run_id}")
