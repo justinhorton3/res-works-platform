@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import JurisdictionPanel from './JurisdictionPanel.vue'
 
 const files = ref([])
@@ -12,6 +12,21 @@ const evidencePages = ref([])
 const sourceUrl = ref('')
 const decisions = ref({})
 const selectedJurisdiction = ref('arkansas-baseline')
+const reviewSummary = computed(() => {
+  const result = analysis.value?.result
+  if (!result) return null
+  const coverage = result.evidence_coverage || {}
+  const findings = result.bundle_analysis?.findings || []
+  const recommendations = result.recommendations || []
+  const missing = Object.entries(coverage).filter(([, item]) => item.status === 'missing').map(([kind]) => kind)
+  const errors = result.geometry_errors?.length || 0
+  let nextAction = 'Review the extracted evidence and confirm the plan in Chief Architect.'
+  if (analysis.value.status === 'failed') nextAction = 'Retry analysis or correct the source export.'
+  else if (missing.length) nextAction = `Add missing evidence: ${missing.join(', ')}.`
+  else if (findings.length || errors) nextAction = 'Resolve the findings below, then export a fresh verification PDF.'
+  else if (recommendations.length) nextAction = 'Review and approve the recommended documentation changes.'
+  return { missing, findings: findings.length, errors, recommendations: recommendations.length, nextAction }
+})
 
 async function loadLatestAnalysis() {
   const response = await fetch(`${apiBase}/projects/sweeter-build/runs`)
@@ -125,6 +140,11 @@ function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB
     <section class="mx-auto max-w-6xl space-y-8 px-8 py-12">
       <div><p class="text-xs font-bold tracking-[0.3em] text-slate-400">PROJECT WORKSPACE</p><h1 class="mt-3 text-5xl font-bold tracking-tight">Plan intake &amp; review</h1><p class="mt-4 max-w-3xl text-lg text-slate-500">Import Chief Architect exports, review evidence, and prepare controlled handoff actions. Geometry stays local and Chief remains authoritative.</p></div>
       <JurisdictionPanel @change="selectedJurisdiction = $event" />
+      <section v-if="reviewSummary" aria-label="Review summary" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div class="flex items-start justify-between"><div><h2 class="text-2xl font-bold">What needs attention</h2><p class="mt-2 text-slate-500">A decision-oriented summary of this analysis run.</p></div><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-500">Next action</span></div>
+        <p class="mt-5 rounded-xl bg-orange-50 p-4 font-semibold text-orange-900">{{ reviewSummary.nextAction }}</p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-3"><div class="rounded-xl bg-slate-50 p-4"><div class="text-2xl font-bold text-slate-900">{{ reviewSummary.findings + reviewSummary.errors }}</div><div class="text-sm text-slate-500">Findings to review</div></div><div class="rounded-xl bg-slate-50 p-4"><div class="text-2xl font-bold text-slate-900">{{ reviewSummary.recommendations }}</div><div class="text-sm text-slate-500">Documentation actions</div></div><div class="rounded-xl bg-slate-50 p-4"><div class="text-2xl font-bold text-slate-900">{{ reviewSummary.missing.length }}</div><div class="text-sm text-slate-500">Evidence types missing</div></div></div>
+      </section>
       <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <div class="flex items-start justify-between"><div><h2 class="text-2xl font-bold">1. Add source files</h2><p class="mt-2 text-slate-400">Chief exports, PDFs, CAD evidence, or project data</p></div><span class="text-2xl font-bold text-slate-200">01</span></div>
         <input ref="input" class="hidden" type="file" :accept="supported" multiple @change="addFiles($event.target.files)">
