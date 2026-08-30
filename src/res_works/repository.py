@@ -9,6 +9,7 @@ from .models import (
     CodeSource,
     AnalysisRun,
     ApprovalDecision,
+    HandoffCheckpoint,
     DocumentationItem,
     PdfPageEvidence,
     ProjectManifest,
@@ -73,6 +74,8 @@ class ProjectRepository:
             )"""
         )
         self._connection.execute("CREATE TABLE IF NOT EXISTS approval_decisions (recommendation_id TEXT PRIMARY KEY, decision_json TEXT NOT NULL)")
+        self._connection.execute("CREATE TABLE IF NOT EXISTS approval_decision_history (id INTEGER PRIMARY KEY AUTOINCREMENT, recommendation_id TEXT NOT NULL, decision_json TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
+        self._connection.execute("CREATE TABLE IF NOT EXISTS handoff_checkpoints (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, checkpoint_json TEXT NOT NULL)")
         self._connection.execute(
             """CREATE TABLE IF NOT EXISTS documentation_items (
                 id TEXT PRIMARY KEY,
@@ -201,8 +204,28 @@ class ProjectRepository:
         return [AnalysisRun.model_validate(json.loads(row["run_json"])) for row in rows]
 
     def save_approval_decision(self, decision: ApprovalDecision) -> None:
+        self._connection.execute("INSERT INTO approval_decision_history(recommendation_id, decision_json) VALUES (?, ?)", (decision.recommendation_id, json.dumps(decision.model_dump(mode="json"), sort_keys=True)))
         self._connection.execute("INSERT INTO approval_decisions(recommendation_id, decision_json) VALUES (?, ?) ON CONFLICT(recommendation_id) DO UPDATE SET decision_json=excluded.decision_json", (decision.recommendation_id, json.dumps(decision.model_dump(mode="json"), sort_keys=True)))
         self._connection.commit()
+
+    def list_approval_history(self, recommendation_id: str | None = None) -> list[ApprovalDecision]:
+        if recommendation_id:
+            rows = self._connection.execute("SELECT decision_json FROM approval_decision_history WHERE recommendation_id = ? ORDER BY id", (recommendation_id,)).fetchall()
+        else:
+            rows = self._connection.execute("SELECT decision_json FROM approval_decision_history ORDER BY id").fetchall()
+        return [ApprovalDecision.model_validate(json.loads(row["decision_json"])) for row in rows]
+
+    def list_approval_decisions(self) -> list[ApprovalDecision]:
+        rows = self._connection.execute("SELECT decision_json FROM approval_decisions ORDER BY recommendation_id").fetchall()
+        return [ApprovalDecision.model_validate(json.loads(row["decision_json"])) for row in rows]
+
+    def save_checkpoint(self, checkpoint: HandoffCheckpoint) -> None:
+        self._connection.execute("INSERT OR REPLACE INTO handoff_checkpoints(id, project_id, checkpoint_json) VALUES (?, ?, ?)", (checkpoint.id, checkpoint.project_id, json.dumps(checkpoint.model_dump(mode="json"), sort_keys=True)))
+        self._connection.commit()
+
+    def get_checkpoint(self, checkpoint_id: str) -> HandoffCheckpoint | None:
+        row = self._connection.execute("SELECT checkpoint_json FROM handoff_checkpoints WHERE id = ?", (checkpoint_id,)).fetchone()
+        return HandoffCheckpoint.model_validate(json.loads(row["checkpoint_json"])) if row else None
 
     def save_page_evidence(self, evidence: PdfPageEvidence) -> None:
         encoded = json.dumps(

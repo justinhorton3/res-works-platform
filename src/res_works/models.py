@@ -214,6 +214,15 @@ class ChiefHandoff(RESModel):
     native_write_performed: bool = False
 
 
+class HandoffCheckpoint(RESModel):
+    id: str
+    project_id: str
+    run_id: str
+    change_set_id: str
+    status: Literal["ready", "recovered"] = "ready"
+    note: str = "Checkpoint created before supervised Chief edits."
+
+
 class ProjectManifest(RESModel):
     id: str
     name: str

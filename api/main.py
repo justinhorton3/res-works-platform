@@ -6,11 +6,11 @@ import zipfile
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
-from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, FactKind, ObservedFact
+from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, FactKind, HandoffCheckpoint, ObservedFact, Recommendation
 from res_works.caproj import caproj_contents_report, extract_native_files, inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities, summarize_dxf_evidence
@@ -24,6 +24,7 @@ from res_works.rule_catalog import load_requirements, requirements_for_profile
 from res_works.jurisdiction import load_rule_profiles, resolve_rule_profile
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
+from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_markdown
 
 WORKSPACE = Path("/data")
 PROJECT_ID = "sweeter-build"
@@ -138,6 +139,14 @@ def save_recommendation_decision(project_id: str, recommendation_id: str, decisi
     repository.save_approval_decision(decision)
     repository.close()
     return decision
+
+
+@app.get("/projects/{project_id}/recommendations/{recommendation_id}/history")
+def recommendation_history(project_id: str, recommendation_id: str) -> list[ApprovalDecision]:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    history = repository.list_approval_history(recommendation_id)
+    repository.close()
+    return history
 
 
 @app.post("/projects/{project_id}/files")
@@ -284,3 +293,50 @@ def list_analyses(project_id: str) -> list[AnalysisRun]:
     runs = repository.list_analysis_runs(project_id)
     repository.close()
     return runs
+
+
+@app.get("/projects/{project_id}/runs/{run_id}/handoff")
+def download_handoff(project_id: str, run_id: str) -> Response:
+    """Return an editable Markdown handoff containing approved items only."""
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    run = repository.get_analysis_run(run_id)
+    decisions = repository.list_approval_decisions()
+    repository.close()
+    if run is None or run.project_id != project_id:
+        raise HTTPException(status_code=404, detail="Analysis run not found")
+    recommendations = [Recommendation.model_validate(item) for item in run.result.get("recommendations", [])]
+    decided = apply_decisions(recommendations, decisions)
+    source_id = run.source_snapshot_ids[0] if run.source_snapshot_ids else "unknown"
+    change_set = build_change_set(project_id, source_id, decided)
+    handoff = build_chief_handoff(change_set, recommendations=decided)
+    return Response(render_handoff_markdown(handoff), media_type="text/markdown", headers={"Content-Disposition": f'attachment; filename="{project_id}-{change_set.id}-chief-handoff.md"'})
+
+
+@app.post("/projects/{project_id}/runs/{run_id}/checkpoints")
+def create_checkpoint(project_id: str, run_id: str) -> HandoffCheckpoint:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    run = repository.get_analysis_run(run_id)
+    if run is None or run.project_id != project_id:
+        repository.close()
+        raise HTTPException(status_code=404, detail="Analysis run not found")
+    recommendations = [Recommendation.model_validate(item) for item in run.result.get("recommendations", [])]
+    decisions = repository.list_approval_decisions()
+    source_id = run.source_snapshot_ids[0] if run.source_snapshot_ids else "unknown"
+    change_set = build_change_set(project_id, source_id, apply_decisions(recommendations, decisions))
+    checkpoint = HandoffCheckpoint(id=f"checkpoint-{change_set.id}", project_id=project_id, run_id=run_id, change_set_id=change_set.id)
+    repository.save_checkpoint(checkpoint)
+    repository.close()
+    return checkpoint
+
+
+@app.post("/projects/{project_id}/checkpoints/{checkpoint_id}/recover")
+def recover_checkpoint(project_id: str, checkpoint_id: str) -> HandoffCheckpoint:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    checkpoint = repository.get_checkpoint(checkpoint_id)
+    if checkpoint is None or checkpoint.project_id != project_id:
+        repository.close()
+        raise HTTPException(status_code=404, detail="Checkpoint not found")
+    recovered = checkpoint.model_copy(update={"status": "recovered"})
+    repository.save_checkpoint(recovered)
+    repository.close()
+    return recovered

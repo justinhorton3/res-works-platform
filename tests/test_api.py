@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 
 from api.main import app
+from res_works.models import AnalysisRun
+from res_works.repository import ProjectRepository
 
 
 def test_health_endpoint() -> None:
@@ -97,3 +99,25 @@ def test_recommendation_decision_is_saved_by_api(tmp_path) -> None:
     response = client.post("/projects/test/recommendations/rec-1/decision", json=payload)
     assert response.status_code == 200
     assert response.json()["decision"] == "approve"
+    second = client.post("/projects/test/recommendations/rec-1/decision", json={"recommendation_id": "rec-1", "decision": "defer", "decided_by": "designer"})
+    assert second.status_code == 200
+    history = client.get("/projects/test/recommendations/rec-1/history")
+    assert [item["decision"] for item in history.json()] == ["approve", "defer"]
+
+
+def test_handoff_download_and_checkpoint_are_approval_gated(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    repository = ProjectRepository(tmp_path / "res-works.sqlite3")
+    repository.save_analysis_run(AnalysisRun(id="run-1", project_id="test", source_snapshot_ids=["snap-1"], status="completed", result={"recommendations": [{"id": "rec-1", "project_id": "test", "documentation_item_id": "note-1", "reason": "observed", "title": "Note", "proposed_text": "Use the approved note", "status": "proposed"}]}))
+    repository.close()
+    client = TestClient(app)
+    decision = client.post("/projects/test/recommendations/rec-1/decision", json={"recommendation_id": "rec-1", "decision": "approve", "decided_by": "designer"})
+    assert decision.status_code == 200
+    handoff = client.get("/projects/test/runs/run-1/handoff")
+    assert handoff.status_code == 200
+    assert "rec-1" in handoff.text
+    checkpoint = client.post("/projects/test/runs/run-1/checkpoints")
+    assert checkpoint.status_code == 200
+    recovered = client.post(f"/projects/test/checkpoints/{checkpoint.json()['id']}/recover")
+    assert recovered.json()["status"] == "recovered"
