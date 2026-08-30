@@ -3,9 +3,36 @@
 import hashlib
 import json
 import zipfile
+from collections import Counter
 from pathlib import Path
 
 from .models import CaprojInventory
+
+
+def extract_native_files(path: str | Path, destination: str | Path) -> dict[str, list[dict[str, object]]]:
+    """Extract native Chief plan/layout members for downstream analysis.
+
+    CAPROJ is a ZIP container.  The native files are binary Chief artifacts,
+    so extraction is deliberately separate from parsing and preserves the
+    archive member names and byte sizes as provenance.
+    """
+    package = Path(path)
+    target_root = Path(destination)
+    target_root.mkdir(parents=True, exist_ok=True)
+    extracted: dict[str, list[dict[str, object]]] = {"plan": [], "layout": []}
+    with zipfile.ZipFile(package) as archive:
+        for member in archive.infolist():
+            lower = member.filename.lower()
+            kind = "plan" if lower.endswith(".plan") else "layout" if lower.endswith(".layout") else None
+            if kind is None or member.is_dir():
+                continue
+            relative = Path(member.filename)
+            output = target_root / relative
+            output.parent.mkdir(parents=True, exist_ok=True)
+            with archive.open(member) as source, output.open("wb") as destination_file:
+                destination_file.write(source.read())
+            extracted[kind].append({"archive_path": member.filename, "path": str(output), "byte_size": member.file_size})
+    return extracted
 
 
 def inventory_caproj(path: str | Path) -> CaprojInventory:
@@ -18,6 +45,11 @@ def inventory_caproj(path: str | Path) -> CaprojInventory:
         if "manifest.json" not in names:
             raise ValueError("caproj package does not contain manifest.json")
         manifest = json.loads(archive.read("manifest.json"))
+    extensions = Counter(
+        Path(name).suffix.lower().lstrip(".") or "<none>"
+        for name in names
+        if not name.endswith("/")
+    )
     native = [name for name in names if name.lower().endswith((".plan", ".layout"))]
     return CaprojInventory(
         filename=package.name,
@@ -34,4 +66,8 @@ def inventory_caproj(path: str | Path) -> CaprojInventory:
             for item in manifest.get("missing_resource_parents", [])
             + manifest.get("missing_resource_relinks", [])
         ],
+        project_name=manifest.get("project_name_from_doc"),
+        resource_extensions=dict(sorted(extensions.items())),
+        exported_file_count=len(manifest.get("exported_files", [])),
+        unmanaged_file_count=len(manifest.get("unmanaged_files_in_export", [])),
     )
