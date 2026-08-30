@@ -13,6 +13,7 @@ from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, F
 from res_works.caproj import caproj_contents_report, extract_native_files, inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities, summarize_dxf_evidence
+from res_works.dxf_preview import render_dxf_preview
 from res_works.dxf_compare import compare_dimension_sets
 from res_works.fact_mapping import facts_from_geometry
 from res_works.plan_fixture import load_plan_geometry
@@ -61,7 +62,8 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
                 categories[entity.category] = categories.get(entity.category, 0) + 1
             summary = summarize_dxf_evidence(source)
             dimension_sources.append({"filename": item.filename, **summary})
-            geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items())), "evidence_summary": summary})
+            preview = render_dxf_preview(source, WORKSPACE / "previews" / project_id / f"{item.id}.svg")
+            geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items())), "evidence_summary": summary, "preview_url": f"/projects/{project_id}/snapshots/{item.id}/preview"})
             if not inventory.dimension_count:
                 findings.append({"severity": "warning", "message": "DXF contains no DIMENSION entities; dimensional verification requires review.", "source_snapshot_id": item.id, "source_filename": item.filename})
         elif suffix == ".dwg":
@@ -209,6 +211,20 @@ def get_source(project_id: str, snapshot_id: str) -> FileResponse:
     if not source.is_file():
         raise HTTPException(status_code=404, detail="Source file not found")
     return FileResponse(source, media_type=snapshot.media_type, filename=snapshot.filename)
+
+
+@app.get("/projects/{project_id}/snapshots/{snapshot_id}/preview")
+def get_preview(project_id: str, snapshot_id: str) -> FileResponse:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    snapshot = repository.get_snapshot(snapshot_id)
+    repository.close()
+    if snapshot is None or snapshot.project_id != project_id or not snapshot.filename.lower().endswith(".dxf"):
+        raise HTTPException(status_code=404, detail="DXF preview not found")
+    preview = WORKSPACE / "previews" / project_id / f"{snapshot_id}.svg"
+    if not preview.is_file():
+        source = WORKSPACE / "incoming" / project_id / snapshot.filename
+        render_dxf_preview(source, preview)
+    return FileResponse(preview, media_type="image/svg+xml", filename=f"{Path(snapshot.filename).stem}.svg")
 
 
 @app.get("/projects/{project_id}/runs/{run_id}")
