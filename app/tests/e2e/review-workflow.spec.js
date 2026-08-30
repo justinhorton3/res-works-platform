@@ -77,11 +77,14 @@ test('clear project evidence resets the upload state', async ({ page }) => {
 })
 
 test('reopens the latest persisted analysis run', async ({ page }) => {
-  await page.route('http://127.0.0.1:8000/projects/sweeter-build/runs**', (route) => route.fulfill({ json: [{ id: 'run-existing', status: 'completed', result: { message: 'Previously indexed', pages: 1, evidence: [{ page_number: 1, text: 'Saved floor plan' }] } }] }))
+  await page.route('http://127.0.0.1:8000/projects/sweeter-build/runs**', (route) => route.fulfill({ json: [{ id: 'run-existing', status: 'completed', source_snapshot_ids: ['caproj-id'], result: { message: 'Previously indexed', pages: 1, evidence: [{ page_number: 1, text: 'Saved floor plan' }], evidence_bundle: [{ snapshot_id: 'caproj-id', filename: 'project.caproj', byte_size: 10 }, { snapshot_id: 'pdf-id', filename: 'verification.pdf', byte_size: 20 }], bundle_analysis: { geometry: [], pdf: [{ snapshot_id: 'pdf-id', filename: 'verification.pdf', pages: 1 }], findings: [], dimension_comparison: { source_count: 0, matched_source_count: 0, finding_count: 0, repeated_dimensions: {} } } } }] }))
   await page.route('http://127.0.0.1:8000/jurisdictions', (route) => route.fulfill({ json: [] }))
   await page.goto('/')
   await expect(page.getByText('Previously indexed')).toBeVisible()
   await expect(page.getByText('Saved floor plan')).toBeVisible()
+  await expect(page.getByText('project.caproj').first()).toBeVisible()
+  await expect(page.getByText('verification.pdf').first()).toBeVisible()
+  await expect(page.locator('iframe[title="PDF source viewer"]')).toHaveAttribute('src', /pdf-id/)
 })
 
 test('shows a completed failed analysis without losing the source row', async ({ page }) => {
