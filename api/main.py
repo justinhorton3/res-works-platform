@@ -186,7 +186,7 @@ def clear_snapshots(project_id: str) -> dict[str, int | str]:
 
 
 @app.post("/projects/{project_id}/runs")
-def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
+def start_analysis(project_id: str, snapshot_id: str, profile_id: str = "arkansas-baseline") -> dict[str, object]:
     repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
     snapshot = repository.get_snapshot(snapshot_id)
     if snapshot is None or snapshot.project_id != project_id:
@@ -228,10 +228,11 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         try:
             plan = load_plan_geometry(source)
             facts = facts_from_geometry(plan, project_id)
-            requirements = load_requirements(Path("reference/arkansas-baseline-requirements.json"))
-            report = build_validation_report(project_id, "arkansas-baseline", requirements, facts, plan)
+            profile = resolve_rule_profile(load_rule_profiles(Path("reference/jurisdiction-profiles.json")), profile_id)
+            requirements = requirements_for_profile(load_requirements(Path("reference/arkansas-baseline-requirements.json")), profile.id)
+            report = build_validation_report(project_id, profile.id, requirements, facts, plan)
             recommendations = recommendations_for_facts(project_id, facts)
-            result = {"message": "Plan geometry validated for review", "pages": 0, "fact_count": len(facts), "geometry_errors": report.geometry_errors, "validation": report.model_dump(mode="json"), "recommendations": recommendations}
+            result = {"message": f"Plan geometry validated for {profile.jurisdiction}", "pages": 0, "fact_count": len(facts), "geometry_errors": report.geometry_errors, "validation": report.model_dump(mode="json"), "jurisdiction_profile": profile.model_dump(mode="json"), "recommendations": recommendations}
         except (ValueError, OSError, json.JSONDecodeError) as error:
             result = {"message": f"Plan JSON could not be analyzed: {error}", "pages": 0, "unsupported": True}
     run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed", result=result)

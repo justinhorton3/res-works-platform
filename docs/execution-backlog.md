@@ -93,8 +93,8 @@ and end-to-end acceptance remain incomplete.
 ### M6 — Rules and jurisdiction
 
 - **M6.1** As a reviewer, I can select project type, county, and municipality.
-  **In progress:** selectable Arkansas, Benton County, and Washington County
-  profiles are exposed by the API.
+  **In progress:** selectable profiles are exposed in the UI and the selected
+  profile is now passed into PLAN analysis.
 - **M6.2** As a reviewer, I can evaluate adopted baseline and local overlays
   with source, edition, and verification date.
 - **M6.3** As a reviewer, I receive `pass`, `fail`, `not_verified`, or
