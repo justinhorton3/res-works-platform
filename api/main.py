@@ -260,6 +260,9 @@ def start_analysis(project_id: str, snapshot_id: str, profile_id: str = "arkansa
             result = {"message": f"Plan geometry validated for {profile.jurisdiction}", "pages": 0, "fact_count": len(facts), "geometry_errors": report.geometry_errors, "validation": report.model_dump(mode="json"), "jurisdiction_profile": profile.model_dump(mode="json"), "recommendations": recommendations}
         except (ValueError, OSError, json.JSONDecodeError) as error:
             result = {"message": f"Plan JSON could not be analyzed: {error}", "pages": 0, "unsupported": True}
+    result.setdefault("evidence_bundle", evidence_bundle)
+    result.setdefault("bundle_analysis", bundle_analysis)
+    result.setdefault("evidence_coverage", evidence_coverage(project_snapshots))
     run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed", result=result)
     repository.save_analysis_run(run)
     repository.close()
