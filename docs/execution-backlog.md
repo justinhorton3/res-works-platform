@@ -29,7 +29,7 @@ that any plan is permit-ready.
 | M8 | Operational hardening | Complete | 100% |
 | M9 | Real-bundle integration | Complete | 100% |
 | M10 | Reproducible test runtime | Complete | 100% |
-| M11 | Reviewer markup and amended review PDF | In progress | 50% |
+| M11 | Reviewer markup and amended review PDF | In progress | 75% |
 
 ## User stories and acceptance criteria
 
@@ -163,8 +163,9 @@ M10 is complete when the test profile builds, runs, and reports the suite
   note, arrow, or rectangle. **In progress:** note pins and coordinates exist;
   arrow and rectangle editing remain to be completed.
 - **M11.3** As a reviewer, I can generate an amended PDF without changing the
-  original source. **Planned:** bake approved markups onto copied PDF pages,
-  preserve the source snapshot, and record an immutable revision timestamp.
+  original source. **In progress:** bake persisted markups onto copied PDF
+  pages and append a consolidated review page; immutable revision metadata and
+  visual output verification remain.
 - **M11.4** As a reviewer, I can append a consolidated review page listing all
   required changes, page references, statuses, and notes. **Planned:** render
   the appendix into the amended PDF and retain its generation metadata.
