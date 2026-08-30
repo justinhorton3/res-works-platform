@@ -12,6 +12,9 @@ def test_recommendations_are_deterministic_and_evidence_linked() -> None:
     second = recommend_documentation("p-1", [item], facts)
     assert first == second
     assert first[0].evidence_fact_ids == ["f1"]
+    assert first[0].proposed_text == "Verify existing conditions."
+    assert first[0].target_sheet == "General Notes"
+    assert first[0].source_refs == []
     assert first[0].id.startswith("rec-")
 
 

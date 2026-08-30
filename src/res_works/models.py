@@ -171,9 +171,14 @@ class Recommendation(RESModel):
     id: str
     project_id: str
     documentation_item_id: str
+    title: str
+    category: Literal["general_note", "callout", "cad_detail", "structural_detail"]
+    proposed_text: str
     reason: str
     evidence_fact_ids: list[str] = Field(default_factory=list)
+    source_refs: list[str] = Field(default_factory=list)
     target_sheet: str | None = None
+    professional_review_required: bool = False
     status: ApprovalStatus = ApprovalStatus.PROPOSED
     confidence: Literal["high", "medium", "low"] = "low"
 

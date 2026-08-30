@@ -23,7 +23,7 @@ and end-to-end acceptance remain incomplete.
 | M1 | Local runtime, API, database, and project lifecycle | Complete | 100% |
 | M2 | Chief/CAPROJ/PDF/DXF/DWG intake and evidence bundle | In progress | 70% |
 | M3 | Architectural extraction and cross-source reconciliation | In progress | 30% |
-| M4 | Controlled notes, callouts, details, and recommendations | In progress | 35% |
+| M4 | Controlled notes, callouts, details, and recommendations | In progress | 50% |
 | M5 | Designer approval and Chief handoff | In progress | 35% |
 | M6 | Arkansas and local-jurisdiction validation | In progress | 40% |
 | M7 | Final QA, watcher, and new-plan acceptance testing | Planned | 15% |
@@ -72,7 +72,9 @@ and end-to-end acceptance remain incomplete.
 - **M4.1** As a designer, I can maintain versioned general notes, callouts,
   CAD details, structural details, and schedules.
 - **M4.2** As a reviewer, I receive recommendations tied to observed facts,
-  source evidence, target sheet/view, reason, confidence, and review status.
+  source evidence, target sheet/view, proposed text, category, reason,
+  confidence, and review status. **Done:** each recommendation is actionable
+  in the UI and preserves source references and professional-review flags.
 - **M4.3** As a designer, I can distinguish missing documentation from a code
   failure. **Done:** recommendations never claim permit approval.
 
