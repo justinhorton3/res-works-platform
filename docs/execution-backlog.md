@@ -25,7 +25,7 @@ and end-to-end acceptance remain incomplete.
 | M3 | Architectural extraction and cross-source reconciliation | In progress | 30% |
 | M4 | Controlled notes, callouts, details, and recommendations | In progress | 50% |
 | M5 | Designer approval and Chief handoff | In progress | 50% |
-| M6 | Arkansas and local-jurisdiction validation | In progress | 40% |
+| M6 | Arkansas and local-jurisdiction validation | In progress | 50% |
 | M7 | Final QA, watcher, and new-plan acceptance testing | Planned | 15% |
 
 ## User stories and acceptance criteria
