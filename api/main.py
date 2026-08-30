@@ -59,6 +59,9 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
             geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items())), "evidence_summary": summarize_dxf_evidence(source)})
             if not inventory.dimension_count:
                 findings.append({"severity": "warning", "message": "DXF contains no DIMENSION entities; dimensional verification requires review.", "source_snapshot_id": item.id, "source_filename": item.filename})
+        elif suffix == ".dwg":
+            geometry.append({"snapshot_id": item.id, "filename": item.filename, "status": "present_not_parsed", "evidence_summary": {"entity_count": 0, "categories": {}, "text_samples": {}}})
+            findings.append({"severity": "info", "message": "DWG is present but requires conversion or supported DWG parsing before entity comparison.", "source_snapshot_id": item.id, "source_filename": item.filename})
         elif item.media_type == "application/pdf":
             pages = inventory_pdf(source, item)
             for page in pages:
