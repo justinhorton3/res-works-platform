@@ -20,3 +20,15 @@ def test_dimension_sets_preserve_repeated_source_handles() -> None:
         {"filename": "sheet.dxf", "dimensions": [{"normalized": '28\'- 8"', "handle": "B"}]},
     ])
     assert result["repeated_dimensions"]['28\'- 8"'] == [{"filename": "full.dxf", "handle": "A"}, {"filename": "sheet.dxf", "handle": "B"}]
+    assert result["matched_source_count"] == 2
+    assert result["finding_details"] == []
+
+
+def test_dimension_sets_report_unmatched_source_without_calling_it_a_conflict() -> None:
+    result = compare_dimension_sets([
+        {"filename": "full.dxf", "dimensions": [{"normalized": '28\'- 8"', "handle": "A"}]},
+        {"filename": "sheet.dxf", "dimensions": [{"normalized": '30\'- 0"', "handle": "B"}]},
+    ])
+    assert result["repeated_dimensions"] == {}
+    assert result["finding_details"][0]["code"] == "no_cross_source_matches"
+    assert result["finding_details"][0]["severity"] == "warning"

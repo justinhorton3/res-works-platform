@@ -63,7 +63,7 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
             for entity in entities:
                 categories[entity.category] = categories.get(entity.category, 0) + 1
             summary = summarize_dxf_evidence(source)
-            dimension_sources.append({"filename": item.filename, **summary})
+            dimension_sources.append({"filename": item.filename, "snapshot_id": item.id, **summary})
             preview = render_dxf_preview(source, WORKSPACE / "previews" / project_id / f"{item.id}.svg")
             geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items())), "evidence_summary": summary, "preview_url": f"/projects/{project_id}/snapshots/{item.id}/preview"})
             if not inventory.dimension_count:
@@ -77,7 +77,7 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
                 repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
                 repository.save_page_evidence(page)
                 repository.close()
-            pdfs.append({"snapshot_id": item.id, "filename": item.filename, "pages": len(pages), "text_pages": sum(page.has_text for page in pages)})
+            pdfs.append({"snapshot_id": item.id, "filename": item.filename, "pages": len(pages), "text_pages": sum(page.has_text for page in pages), "page_references": [{"page_number": page.page_number, "snapshot_id": page.snapshot_id, "locator": f"page {page.page_number}"} for page in pages]})
             if not any(page.has_text for page in pages):
                 findings.append({"severity": "info", "message": "PDF has no extractable text; visual page review is required.", "source_snapshot_id": item.id, "source_filename": item.filename})
     if geometry and not pdfs:
