@@ -26,6 +26,7 @@ from res_works.pdf_review import inventory_pdf
 from res_works.pdf_render import render_pdf_pages
 from res_works.repository import ProjectRepository
 from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_html, render_handoff_markdown
+from res_works.review_pdf import build_review_pdf
 
 WORKSPACE = Path("/data")
 PROJECT_ID = "sweeter-build"
@@ -172,6 +173,22 @@ def list_review_annotations(project_id: str, run_id: str) -> list[ReviewAnnotati
     annotations = repository.list_annotations(run_id)
     repository.close()
     return annotations
+
+
+@app.post("/projects/{project_id}/runs/{run_id}/review-pdf")
+def create_review_pdf(project_id: str, run_id: str) -> FileResponse:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    run = repository.get_analysis_run(run_id)
+    annotations = repository.list_annotations(run_id) if run else []
+    snapshots = [repository.get_snapshot(snapshot_id) for snapshot_id in run.source_snapshot_ids] if run else []
+    snapshot = next((item for item in snapshots if item and item.filename.lower().endswith(".pdf")), None)
+    repository.close()
+    if run is None or run.project_id != project_id or snapshot is None or not snapshot.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=404, detail="A PDF source is required for this review run")
+    source = WORKSPACE / "incoming" / project_id / snapshot.filename
+    output = WORKSPACE / "review-revisions" / project_id / f"{run_id}-review.pdf"
+    build_review_pdf(source, output, annotations)
+    return FileResponse(output, media_type="application/pdf", filename=f"{project_id}-{run_id}-review.pdf")
 
 
 @app.get("/projects/{project_id}/recommendations/{recommendation_id}/history")
