@@ -1,0 +1,19 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./storage:/data
+    environment:
+      RES_WORKSPACE: /data
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - api
