@@ -9,6 +9,9 @@ RES Works uses layered checks:
    must return `{"status":"ok","service":"res-works-api"}`.
 5. `docker compose --profile test run --rm test` runs the backend suite in the
    supported Python 3.12 container, including the real-bundle integration test.
+6. `res-works watch EXPORT_DIR --api-url http://127.0.0.1:8000 --project-id
+   sweeter-build --polls 0` watches a configured export directory and uploads
+   each stable changed artifact to the API for one analysis run.
 
 The Playwright UI tests intentionally mock network responses so that upload,
 clear, failure, jurisdiction, and reopen states remain deterministic. They do
