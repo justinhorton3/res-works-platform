@@ -62,8 +62,18 @@ def summarize_dxf_evidence(path: str | Path) -> dict[str, object]:
     records = extract_architectural_entities(path)
     categories: dict[str, int] = {}
     text_samples: dict[str, list[str]] = {}
+    dimensions: list[dict[str, object]] = []
     for record in records:
         categories[record.category] = categories.get(record.category, 0) + 1
         if record.text and len(text_samples.setdefault(record.category, [])) < 20:
             text_samples[record.category].append(record.text.strip())
-    return {"entity_count": len(records), "categories": dict(sorted(categories.items())), "text_samples": text_samples}
+    document = ezdxf.readfile(path)
+    for entity in document.modelspace():
+        if entity.dxftype() != "DIMENSION":
+            continue
+        try:
+            measurement = float(entity.get_measurement())
+        except (AttributeError, TypeError, ValueError):
+            measurement = None
+        dimensions.append({"handle": entity.dxf.handle, "layer": entity.dxf.layer, "measurement": measurement, "display_text": getattr(entity.dxf, "text", "") or ""})
+    return {"entity_count": len(records), "categories": dict(sorted(categories.items())), "text_samples": text_samples, "dimensions": dimensions}
