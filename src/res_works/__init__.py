@@ -17,7 +17,7 @@ from .dxf_compare import compare_dimension_sets, compare_plan_to_dxf
 from .recommendations import recommend_documentation
 from .plan_fixture import load_plan_geometry
 from .fact_mapping import facts_from_geometry
-from .handoff import apply_decisions, build_change_set, build_chief_handoff
+from .handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_markdown
 from .watcher import discover_exports, is_stable, observe_file
 from .jurisdiction import classify_project, load_rule_profiles, resolve_rule_profile
 from .final_qa import compare_pdf_evidence, unresolved_exceptions

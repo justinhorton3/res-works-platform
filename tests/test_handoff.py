@@ -1,4 +1,4 @@
-from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff
+from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_markdown
 from res_works.models import ApprovalDecision, ApprovalStatus, Recommendation
 
 
@@ -25,6 +25,10 @@ def test_handoff_contains_only_explicitly_approved_recommendations() -> None:
     assert handoff.native_write_performed is False
     assert handoff.recommendation_ids == ["rec-egress"]
     assert handoff.items[0]["id"] == "rec-egress"
+    markdown = render_handoff_markdown(handoff)
+    assert "Approved items" in markdown
+    assert "rec-egress" in markdown
+    assert "Native file write performed: **No**" in markdown
     assert decided[1].status is ApprovalStatus.PROPOSED
 
 
