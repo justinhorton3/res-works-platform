@@ -23,6 +23,11 @@ findings, and persisted run are visible.
 No test may claim permit approval. Failures must retain the source artifact and
 identify whether the problem occurred during upload, parsing, or validation.
 
+The UI treats one file-picker or drag-and-drop selection as one evidence-bundle
+intake: all selected files are uploaded first, then one analysis run is started
+against the completed project bundle. This prevents an early CAPROJ-only run
+from being mistaken for the final review of matching PDF and CAD exports.
+
 The real-bundle integration test is `tests/test_real_bundle_acceptance.py`.
 It creates a small valid CAPROJ container, PDF, and DXF and sends all three
 through the real API analyzer. It verifies the combined evidence bundle,

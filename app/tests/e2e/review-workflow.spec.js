@@ -20,6 +20,28 @@ test('upload remains visible and transitions through analysis into review', asyn
   await expect(page.getByText('Floor plan')).toBeVisible()
 })
 
+test('analyzes a multi-file upload as one evidence bundle', async ({ page }) => {
+  let runRequests = 0
+  await page.route('http://127.0.0.1:8000/projects/sweeter-build/runs**', async (route) => {
+    if (route.request().method() === 'GET') return route.fulfill({ json: [] })
+    runRequests += 1
+    await route.fulfill({ json: { id: 'run-bundle', status: 'completed', result: { message: 'Bundle indexed', pages: 1, evidence: [] } } })
+  })
+  await page.route('http://127.0.0.1:8000/projects/sweeter-build/files**', async (route) => {
+    const name = route.request().postData()?.includes('plan.pdf') ? 'plan.pdf' : 'plan.dxf'
+    await route.fulfill({ json: { id: `snapshot-${name}`, filename: name, byte_size: 4, status: 'stored' } })
+  })
+  await page.goto('/')
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: /drop files here or browse/i }).click()
+  await (await chooser).setFiles([
+    { name: 'plan.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF') },
+    { name: 'plan.dxf', mimeType: 'application/dxf', buffer: Buffer.from('DXF') },
+  ])
+  await expect(page.getByText('Bundle indexed')).toBeVisible()
+  expect(runRequests).toBe(1)
+})
+
 test('empty project clearly explains how to begin', async ({ page }) => {
   await page.route('http://127.0.0.1:8000/projects/sweeter-build/runs**', (route) => route.fulfill({ json: [] }))
   await page.goto('/')
