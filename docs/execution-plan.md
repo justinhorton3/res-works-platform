@@ -23,6 +23,33 @@ Chief-native design
 Validation is not the first product. It supports documentation completeness and
 helps identify safety, code, and professional-review issues.
 
+## Delivery status — 2026-08-30
+
+The repository is approximately **88% complete by story-weighted scope**. This
+percentage counts each acceptance story equally, gives partial credit only
+where the backlog explicitly says a story is in progress, and counts a story
+as complete only after implementation, tests, documentation, and review
+evidence are present. It is a delivery indicator, not a claim that plans are
+permit-ready.
+
+| Milestone | Status | Completion | Remaining focus |
+| --- | --- | ---: | --- |
+| M1 Runtime and lifecycle | Complete | 100% | None in current scope |
+| M2 Source intake and evidence | Complete | 100% | None in current scope |
+| M3 Extraction and reconciliation | Complete | 100% | None in current scope |
+| M4 Documentation intelligence | Complete | 100% | Office-specific content still requires owner review |
+| M5 Approval and Chief handoff | In progress | 50% | Downloadable handoff package, checkpoints, recovery |
+| M6 Rules and jurisdiction | In progress | 33% | Verified overlays, remodel rules, rule evaluation |
+| M7 Watcher and acceptance | Complete | 100% | None in current scope |
+| M8 Operational hardening | Complete | 100% | None in current scope |
+| M9 Real-bundle integration | Complete | 100% | Operator verification with each new source bundle |
+| M10 Reproducible test runtime | Complete | 100% | None in current scope |
+
+The remaining 12% is concentrated in M5 and M6. The final implementation
+sequence is: finish the approval and handoff safety boundary, finish verified
+jurisdiction/rules evaluation, then run release-level acceptance against an
+owner-supplied Chief export bundle.
+
 ## What we need to build
 
 ### 1. Local project workspace
@@ -215,16 +242,17 @@ Current status:
 - DXF dimension entities are extracted with handle, layer, measured value, and
   override text.
 - CAPROJ, DXF, DWG, and PDF sources are associated in one project bundle.
-- Cross-source comparison and unit/coordinate reconciliation remain required
-  before dimensions can be treated as verified.
+- Cross-source comparison, PDF page references, and source-linked SVG preview
+  metadata are implemented and covered by the Lot 27 regression suite.
 
-Next grouped milestone:
+Completed grouped milestone:
 
-1. add unit and orientation normalization;
-2. compare multiple DXF sources by dimension evidence;
-3. add missing/conflict findings with source references;
-4. expose the complete dimension review in the UI; and
-5. run the full available test/build loop before one PR.
+1. normalize and compare dimension evidence;
+2. expose source-linked findings in the UI; and
+3. validate the complete loop with one milestone PR.
+
+Next grouped milestone: finish approval, downloadable Chief handoff, and
+recoverable supervised-write checkpoints.
 
 ### Phase 0 — Repository and source foundation
 
