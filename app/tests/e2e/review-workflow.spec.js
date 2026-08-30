@@ -53,3 +53,25 @@ test('clear project evidence resets the upload state', async ({ page }) => {
   await page.getByText('Clear project evidence').click()
   await expect(page.getByText('Upload a source file to start an analysis run')).toBeVisible()
 })
+
+test('reopens the latest persisted analysis run', async ({ page }) => {
+  await page.route('http://127.0.0.1:8000/projects/sweeter-build/runs**', (route) => route.fulfill({ json: [{ id: 'run-existing', status: 'completed', result: { message: 'Previously indexed', pages: 1, evidence: [{ page_number: 1, text: 'Saved floor plan' }] } }] }))
+  await page.route('http://127.0.0.1:8000/jurisdictions', (route) => route.fulfill({ json: [] }))
+  await page.goto('/')
+  await expect(page.getByText('Previously indexed')).toBeVisible()
+  await expect(page.getByText('Saved floor plan')).toBeVisible()
+})
+
+test('shows a completed failed analysis without losing the source row', async ({ page }) => {
+  await page.route('http://127.0.0.1:8000/projects/sweeter-build/runs**', async (route) => {
+    if (route.request().method() === 'GET') return route.fulfill({ json: [] })
+    await route.fulfill({ json: { id: 'run-failed', status: 'failed', result: { message: 'CAPROJ could not be read: invalid archive', pages: 0 } } })
+  })
+  await page.route('http://127.0.0.1:8000/projects/sweeter-build/files**', (route) => route.fulfill({ json: { id: 'snapshot-caproj', filename: 'broken.caproj', byte_size: 10, status: 'stored' } }))
+  await page.goto('/')
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: /drop files here or browse/i }).click()
+  await (await chooser).setFiles({ name: 'broken.caproj', mimeType: 'application/octet-stream', buffer: Buffer.from('broken') })
+  await expect(page.getByText('broken.caproj')).toBeVisible()
+  await expect(page.getByText('CAPROJ could not be read: invalid archive')).toBeVisible()
+})
