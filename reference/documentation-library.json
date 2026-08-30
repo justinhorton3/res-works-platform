@@ -20,5 +20,27 @@
     "revision": "1",
     "approval_status": "draft",
     "professional_review_required": true
+  },
+  {
+    "id": "callout-chief-source-coordination",
+    "title": "Chief source coordination",
+    "text": "Coordinate this review with the editable Chief Architect source project and layout.",
+    "category": "callout",
+    "source_ids": ["internal-standard-001"],
+    "applies_when": ["chief.package=true"],
+    "revision": "1",
+    "approval_status": "draft",
+    "professional_review_required": false
+  },
+  {
+    "id": "callout-cad-coordination",
+    "title": "CAD coordination",
+    "text": "Verify imported CAD geometry against the current Chief Architect model before documentation changes.",
+    "category": "callout",
+    "source_ids": ["internal-standard-001"],
+    "applies_when": ["cad.dxf=true"],
+    "revision": "1",
+    "approval_status": "draft",
+    "professional_review_required": false
   }
 ]

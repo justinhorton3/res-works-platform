@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
-from res_works.models import AnalysisRun
+from res_works.models import AnalysisRun, DocumentationItem, FactKind, ObservedFact
 from res_works.caproj import inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities
@@ -23,6 +23,11 @@ from res_works.repository import ProjectRepository
 
 WORKSPACE = Path("/data")
 PROJECT_ID = "sweeter-build"
+
+
+def recommendations_for_facts(project_id: str, facts: list[ObservedFact]) -> list[dict[str, object]]:
+    library = [DocumentationItem.model_validate(item) for item in json.loads(Path("reference/documentation-library.json").read_text())]
+    return [item.model_dump(mode="json") for item in recommend_documentation(project_id, library, facts)]
 
 app = FastAPI(title="RES Works API", version="0.1.0")
 app.add_middleware(
@@ -69,11 +74,13 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         result = {"message": "PDF pages indexed for review", "pages": len(pages), "evidence": [page.model_dump(mode="json") for page in pages]}
     elif source.suffix.lower() == ".caproj":
         inventory = inventory_caproj(source)
-        result = {"message": "Chief package inventoried for review", "pages": 0, "inventory": inventory.model_dump(mode="json")}
+        facts = [ObservedFact(id="fact-chief-package", key="chief.package", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
+        result = {"message": "Chief package inventoried for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "fact_count": len(facts), "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dxf":
         inventory = inventory_dxf(source)
         entities = extract_architectural_entities(source)
-        result = {"message": "DXF geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities)}
+        facts = [ObservedFact(id="fact-cad-dxf", key="cad.dxf", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
+        result = {"message": "DXF geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities), "fact_count": len(facts), "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dwg":
         result = {"message": "DWG stored; conversion to DXF is required before analysis", "pages": 0, "unsupported": True}
     elif source.suffix.lower() == ".json":
@@ -82,9 +89,8 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
             facts = facts_from_geometry(plan, project_id)
             requirements = load_requirements(Path("reference/arkansas-baseline-requirements.json"))
             report = build_validation_report(project_id, "arkansas-baseline", requirements, facts, plan)
-            library = [DocumentationItem.model_validate(item) for item in json.loads(Path("reference/documentation-library.json").read_text())]
-            recommendations = recommend_documentation(project_id, library, facts)
-            result = {"message": "Plan geometry validated for review", "pages": 0, "fact_count": len(facts), "geometry_errors": report.geometry_errors, "validation": report.model_dump(mode="json"), "recommendations": [item.model_dump(mode="json") for item in recommendations]}
+            recommendations = recommendations_for_facts(project_id, facts)
+            result = {"message": "Plan geometry validated for review", "pages": 0, "fact_count": len(facts), "geometry_errors": report.geometry_errors, "validation": report.model_dump(mode="json"), "recommendations": recommendations}
         except (ValueError, OSError, json.JSONDecodeError) as error:
             result = {"message": f"Plan JSON could not be analyzed: {error}", "pages": 0, "unsupported": True}
     run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed")
