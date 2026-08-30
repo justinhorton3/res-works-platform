@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
@@ -60,6 +61,19 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
     repository.save_analysis_run(run)
     repository.close()
     return {"id": run.id, "status": run.status, "source_snapshot_ids": run.source_snapshot_ids, "result": result}
+
+
+@app.get("/projects/{project_id}/snapshots/{snapshot_id}/source")
+def get_source(project_id: str, snapshot_id: str) -> FileResponse:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    snapshot = repository.get_snapshot(snapshot_id)
+    repository.close()
+    if snapshot is None or snapshot.project_id != project_id:
+        raise HTTPException(status_code=404, detail="Source snapshot not found")
+    source = WORKSPACE / "incoming" / project_id / snapshot.filename
+    if not source.is_file():
+        raise HTTPException(status_code=404, detail="Source file not found")
+    return FileResponse(source, media_type=snapshot.media_type, filename=snapshot.filename)
 
 
 @app.get("/projects/{project_id}/runs/{run_id}")
