@@ -16,6 +16,8 @@ operational documentation for RES Works.
   source registry.
 - [Execution plan](execution-plan.md) - product order, phases, deliverables,
   acceptance criteria, and first implementation sprint.
+- [Execution backlog](execution-backlog.md) - grouped milestones, user
+  stories, status estimates, acceptance criteria, and PR delivery rules.
 
 The remaining implementation is grouped into five reviewable commits in the
 execution plan, beginning with `.caproj` package intake and DXF/DWG geometry
