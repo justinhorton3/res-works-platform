@@ -42,7 +42,7 @@ def evidence_coverage(snapshots: list[object]) -> dict[str, object]:
     has_dwg = any(name.endswith(".dwg") for name in names)
     has_pdf = any(name.endswith(".pdf") for name in names)
     return {
-        "geometry": {"status": "available" if has_dxf or has_dwg else "missing", "sources": sorted(name for name in names if name.endswith((".dxf", ".dwg")))},
+        "geometry": {"status": "available" if has_dxf else "missing", "sources": sorted(name for name in names if name.endswith(".dxf")), "optional_sources": sorted(name for name in names if name.endswith(".dwg"))},
         "visual": {"status": "available" if has_pdf else "missing", "sources": sorted(name for name in names if name.endswith(".pdf"))},
         "schedules": {"status": "available" if has_pdf else "missing", "sources": sorted(name for name in names if name.endswith(".pdf"))},
         "energy": {"status": "missing", "sources": []},
@@ -72,7 +72,7 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
                 findings.append({"severity": "warning", "message": "DXF contains no DIMENSION entities; dimensional verification requires review.", "source_snapshot_id": item.id, "source_filename": item.filename})
         elif suffix == ".dwg":
             geometry.append({"snapshot_id": item.id, "filename": item.filename, "status": "present_not_parsed", "evidence_summary": {"entity_count": 0, "categories": {}, "text_samples": {}}})
-            findings.append({"severity": "info", "message": "DWG is present but requires conversion or supported DWG parsing before entity comparison.", "source_snapshot_id": item.id, "source_filename": item.filename})
+            findings.append({"severity": "coverage", "message": "DWG is present but optional; export DXF from Chief for geometry validation.", "source_snapshot_id": item.id, "source_filename": item.filename})
         elif suffix == ".pdf":
             pages = inventory_pdf(source, item)
             for page in pages:
