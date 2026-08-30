@@ -143,6 +143,11 @@ def test_handoff_download_and_checkpoint_are_approval_gated(tmp_path) -> None:
     handoff = client.get("/projects/test/runs/run-1/handoff")
     assert handoff.status_code == 200
     assert "rec-1" in handoff.text
+    assert handoff.headers["content-type"].startswith("text/html")
+    copyable = client.get("/projects/test/runs/run-1/handoff?format=markdown")
+    assert copyable.status_code == 200
+    assert copyable.headers["content-type"].startswith("text/plain")
+    assert "Native file write performed: **No**" in copyable.text
     checkpoint = client.post("/projects/test/runs/run-1/checkpoints")
     assert checkpoint.status_code == 200
     recovered = client.post(f"/projects/test/checkpoints/{checkpoint.json()['id']}/recover")

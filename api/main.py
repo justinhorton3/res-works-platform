@@ -25,7 +25,7 @@ from res_works.jurisdiction import classify_project, load_rule_profiles, profile
 from res_works.pdf_review import inventory_pdf
 from res_works.pdf_render import render_pdf_pages
 from res_works.repository import ProjectRepository
-from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_html
+from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_html, render_handoff_markdown
 
 WORKSPACE = Path("/data")
 PROJECT_ID = "sweeter-build"
@@ -333,7 +333,7 @@ def list_analyses(project_id: str) -> list[AnalysisRun]:
 
 
 @app.get("/projects/{project_id}/runs/{run_id}/handoff")
-def download_handoff(project_id: str, run_id: str) -> Response:
+def download_handoff(project_id: str, run_id: str, format: str = "html") -> Response:
     """Return an editable Markdown handoff containing approved items only."""
     repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
     run = repository.get_analysis_run(run_id)
@@ -346,7 +346,9 @@ def download_handoff(project_id: str, run_id: str) -> Response:
     source_id = run.source_snapshot_ids[0] if run.source_snapshot_ids else "unknown"
     change_set = build_change_set(project_id, source_id, decided)
     handoff = build_chief_handoff(change_set, recommendations=decided)
-    return Response(render_handoff_html(handoff), media_type="text/html", headers={"Content-Disposition": f'attachment; filename="{project_id}-{change_set.id}-chief-handoff.html"'})
+    if format == "markdown":
+        return Response(render_handoff_markdown(handoff), media_type="text/plain", headers={"Content-Disposition": "inline"})
+    return Response(render_handoff_html(handoff), media_type="text/html", headers={"Content-Disposition": "inline"})
 
 
 @app.post("/projects/{project_id}/runs/{run_id}/checkpoints")
