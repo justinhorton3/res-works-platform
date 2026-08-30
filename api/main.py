@@ -24,7 +24,7 @@ from res_works.rule_catalog import load_requirements, requirements_for_profile
 from res_works.jurisdiction import classify_project, load_rule_profiles, profile_scope, resolve_rule_profile
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
-from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_markdown
+from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_html
 
 WORKSPACE = Path("/data")
 PROJECT_ID = "sweeter-build"
@@ -314,7 +314,7 @@ def download_handoff(project_id: str, run_id: str) -> Response:
     source_id = run.source_snapshot_ids[0] if run.source_snapshot_ids else "unknown"
     change_set = build_change_set(project_id, source_id, decided)
     handoff = build_chief_handoff(change_set, recommendations=decided)
-    return Response(render_handoff_markdown(handoff), media_type="text/markdown", headers={"Content-Disposition": f'attachment; filename="{project_id}-{change_set.id}-chief-handoff.md"'})
+    return Response(render_handoff_html(handoff), media_type="text/html", headers={"Content-Disposition": f'attachment; filename="{project_id}-{change_set.id}-chief-handoff.html"'})
 
 
 @app.post("/projects/{project_id}/runs/{run_id}/checkpoints")

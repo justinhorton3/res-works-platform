@@ -1,6 +1,7 @@
 """Approval-gated, native-Chief-safe handoff preparation."""
 
 from hashlib import sha256
+from html import escape
 
 from .models import ApprovalDecision, ApprovalStatus, ChangeSet, ChiefHandoff, Recommendation
 
@@ -100,3 +101,13 @@ def render_handoff_markdown(handoff: ChiefHandoff) -> str:
             f"- Evidence: {', '.join(item.get('source_refs') or []) or 'Confirm source evidence'}",
             "- [ ] Applied in Chief", "- [ ] Included in verification PDF"])
     return "\n".join(lines) + "\n"
+
+
+def render_handoff_html(handoff: ChiefHandoff) -> str:
+    """Render a browser-friendly handoff review without writing native files."""
+    items = "".join(
+        f"<article><h2>{escape(str(item['title']))}</h2><p><b>ID:</b> {escape(str(item['id']))}</p><p><b>Target:</b> {escape(str(item.get('target_sheet') or 'Confirm in Chief'))}</p><p>{escape(str(item['proposed_text']))}</p><p><b>Evidence:</b> {escape(', '.join(item.get('source_refs') or []) or 'Confirm source evidence')}</p><label>☐ Applied in Chief &nbsp; ☐ Included in verification PDF</label></article>"
+        for item in handoff.items
+    ) or "<p>No recommendations approved for handoff.</p>"
+    instructions = "".join(f"<li>☐ {escape(instruction)}</li>" for instruction in handoff.instructions)
+    return f"<!doctype html><html><head><meta charset=\"utf-8\"><title>RES Works Chief handoff</title><style>body{{font:16px system-ui;max-width:900px;margin:40px auto;color:#172033}}article{{border:1px solid #cbd5e1;border-radius:12px;padding:18px;margin:16px 0}}li{{margin:8px 0}}.notice{{background:#fff7ed;padding:14px;border-radius:10px}}</style></head><body><h1>RES Works — Chief Architect handoff</h1><p><b>Project:</b> {escape(handoff.project_id)}<br><b>Chief version:</b> {escape(handoff.chief_version)}<br><b>Change set:</b> {escape(handoff.change_set_id)}</p><div class=\"notice\"><b>Native file write performed: No.</b> Verify and apply items manually in Chief Architect.</div><h2>Preflight</h2><ul>{instructions}</ul><h2>Approved items</h2>{items}</body></html>"

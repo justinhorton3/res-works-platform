@@ -8,6 +8,16 @@ import ezdxf
 from .dxf_extract import normalize_layer
 
 
+def _is_floor_plan_layer(layer: str) -> bool:
+    name = normalize_layer(layer).lower()
+    if name.strip() == "0":
+        return True
+    excluded = ("plot plan", "terrain", "camera", "revision", "framing", "roof", "ceiling", "floor truss", "header")
+    if any(term in name for term in excluded):
+        return False
+    return any(term in name for term in ("wall", "door", "window", "stair", "cabinet", "dimension", "room label", "plumbing", "electrical", "fireplace", "casing", "opening"))
+
+
 def render_dxf_preview(path: str | Path, output: str | Path) -> Path:
     document = ezdxf.readfile(path)
     lines: list[tuple[float, float, float, float, str, str]] = []
@@ -16,12 +26,23 @@ def render_dxf_preview(path: str | Path, output: str | Path) -> Path:
         kind = entity.dxftype()
         if kind == "LINE":
             layer = entity.dxf.layer
+            if not _is_floor_plan_layer(layer):
+                continue
             lines.append((entity.dxf.start.x, entity.dxf.start.y, entity.dxf.end.x, entity.dxf.end.y, entity.dxf.handle, layer))
         elif kind in {"TEXT", "MTEXT"}:
+            if not _is_floor_plan_layer(entity.dxf.layer):
+                continue
             point = entity.dxf.insert
             text = entity.dxf.text if kind == "TEXT" else entity.text
             if text:
                 labels.append((point.x, point.y, text.replace("\n", " ")[:80]))
+        elif kind == "DIMENSION" and _is_floor_plan_layer(entity.dxf.layer):
+            try:
+                measurement = entity.get_measurement()
+                point = entity.dxf.defpoint
+                labels.append((point.x, point.y, f"{measurement:.2f} [{entity.dxf.handle}]")[:80])
+            except (AttributeError, TypeError, ValueError):
+                continue
     points = [(x, y) for x1, y1, x2, y2, _, _ in lines for x, y in ((x1, y1), (x2, y2))] or [(0, 0), (100, 100)]
     min_x, max_x = min(x for x, _ in points), max(x for x, _ in points)
     min_y, max_y = min(y for _, y in points), max(y for _, y in points)
