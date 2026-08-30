@@ -65,3 +65,14 @@ def test_plan_json_analysis_returns_geometry_results(tmp_path) -> None:
     assert response.status_code == 200
     assert response.json()["result"]["fact_count"] >= 1
     assert response.json()["result"]["geometry_errors"] == []
+
+
+def test_analysis_run_get_includes_persisted_result(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    client = TestClient(app)
+    upload = client.post("/projects/test/files", files={"file": ("plan.json", b'{"envelope":{"x":0,"y":0,"width":20,"depth":20},"rooms":[],"walls":[],"openings":[],"stairs":[],"porches":[]}', "application/json")})
+    run = client.post(f"/projects/test/runs?snapshot_id={upload.json()['id']}").json()
+    response = client.get(f"/projects/test/runs/{run['id']}")
+    assert response.status_code == 200
+    assert response.json()["result"]["fact_count"] >= 1
