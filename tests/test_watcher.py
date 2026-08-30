@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from res_works.watcher import discover_exports, is_stable, observe_file, stable_changes
+from res_works.watcher import discover_exports, is_stable, observe_file, poll_exports, stable_changes
 
 
 def test_discover_exports_is_local_supported_and_deterministic(tmp_path: Path) -> None:
@@ -39,3 +39,14 @@ def test_stable_changes_deduplicates_repeated_observations(tmp_path: Path) -> No
     source.write_bytes(b"two!")
     changed = observe_file(source, include_hash=True)
     assert stable_changes({first.path: first}, [changed]) == [changed]
+
+
+def test_poll_exports_returns_state_and_new_export_once(tmp_path: Path) -> None:
+    source = tmp_path / "plan.pdf"
+    source.write_bytes(b"pdf")
+    state, changes = poll_exports(tmp_path)
+    assert list(state) == [source]
+    assert changes == [state[source]]
+    next_state, changes = poll_exports(tmp_path, state)
+    assert next_state == state
+    assert changes == []

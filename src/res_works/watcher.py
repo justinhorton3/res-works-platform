@@ -60,3 +60,13 @@ def stable_changes(
         ):
             changed.append(observation)
     return changed
+
+
+def poll_exports(
+    folder: str | Path,
+    previous: dict[Path, FileObservation] | None = None,
+) -> tuple[dict[Path, FileObservation], list[FileObservation]]:
+    """Take one hash-backed poll and return updated state plus stable changes."""
+    current = [observe_file(path, include_hash=True) for path in discover_exports(folder)]
+    state = {observation.path: observation for observation in current}
+    return state, stable_changes(previous or {}, current)
