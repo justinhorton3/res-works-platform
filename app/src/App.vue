@@ -11,6 +11,7 @@ const apiError = ref('')
 const evidencePages = ref([])
 const sourceUrl = ref('')
 const decisions = ref({})
+const selectedJurisdiction = ref('arkansas-baseline')
 
 async function loadLatestAnalysis() {
   const response = await fetch(`${apiBase}/projects/sweeter-build/runs`)
@@ -42,7 +43,7 @@ async function addFiles(selected) {
       entry.snapshotId = stored.id
       entry.status = 'Complete'
       analysis.value = { status: 'Starting analysis…', snapshotId: stored.id }
-      const runResponse = await fetch(`${apiBase}/projects/sweeter-build/runs?snapshot_id=${stored.id}`, { method: 'POST' })
+      const runResponse = await fetch(`${apiBase}/projects/sweeter-build/runs?snapshot_id=${stored.id}&profile_id=${selectedJurisdiction.value}`, { method: 'POST' })
       if (!runResponse.ok) throw new Error(`Analysis failed (${runResponse.status}): ${await runResponse.text()}`)
       analysis.value = await runResponse.json()
       evidencePages.value = analysis.value.result?.evidence || []
@@ -87,7 +88,7 @@ function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB
     </header>
     <section class="mx-auto max-w-6xl space-y-8 px-8 py-12">
       <div><p class="text-xs font-bold tracking-[0.3em] text-slate-400">PROJECT WORKSPACE</p><h1 class="mt-3 text-5xl font-bold tracking-tight">Plan intake &amp; review</h1><p class="mt-4 max-w-3xl text-lg text-slate-500">Import Chief Architect exports, review evidence, and prepare controlled handoff actions. Geometry stays local and Chief remains authoritative.</p></div>
-      <JurisdictionPanel />
+      <JurisdictionPanel @change="selectedJurisdiction = $event" />
       <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <div class="flex items-start justify-between"><div><h2 class="text-2xl font-bold">1. Add source files</h2><p class="mt-2 text-slate-400">Chief exports, PDFs, CAD evidence, or project data</p></div><span class="text-2xl font-bold text-slate-200">01</span></div>
         <input ref="input" class="hidden" type="file" :accept="supported" multiple @change="addFiles($event.target.files)">

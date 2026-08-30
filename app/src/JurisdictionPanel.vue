@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 
+const emit = defineEmits(['change'])
+
 const apiBase = 'http://127.0.0.1:8000'
 const profiles = ref([])
 const selected = ref('arkansas-baseline')
@@ -18,7 +20,7 @@ onMounted(async () => {
       <div><h2 class="text-2xl font-bold">Review jurisdiction</h2><p class="mt-2 text-slate-400">Select the governing profile before interpreting validation results.</p></div>
       <span class="text-2xl font-bold text-slate-200">J</span>
     </div>
-    <select v-model="selected" class="mt-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700" aria-label="Review jurisdiction">
+    <select v-model="selected" @change="emit('change', selected)" class="mt-6 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-700" aria-label="Review jurisdiction">
       <option v-for="profile in profiles" :key="profile.id" :value="profile.id">{{ profile.jurisdiction }}</option>
     </select>
     <div v-if="selectedProfile" class="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">
