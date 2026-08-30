@@ -13,6 +13,7 @@ from .repository import ProjectRepository
 from .reports import build_validation_report
 from .recommendations import recommend_documentation
 from .rule_catalog import load_requirements
+from .watcher import poll_exports
 
 
 def review_pdf(input_path: str | Path, project_id: str, workspace: str | Path) -> dict[str, object]:
@@ -48,8 +49,13 @@ def main() -> None:
     project.add_argument("--facts", type=Path, default=Path("projects/sweeter-build/observed-facts.json"))
     project.add_argument("--plan", type=Path, default=Path("projects/sweeter-build/plan.json"))
     project.add_argument("--documentation-library", type=Path, default=Path("reference/documentation-library.json"))
+    watch = subparsers.add_parser("watch-once", help="scan a Chief export folder once")
+    watch.add_argument("folder", type=Path)
     args = parser.parse_args()
-    if args.command == "review-pdf":
+    if args.command == "watch-once":
+        state, changes = poll_exports(args.folder)
+        print(json.dumps({"folder": str(args.folder), "observed": len(state), "changes": [{"path": str(item.path), "byte_size": item.byte_size, "sha256": item.sha256} for item in changes]}, sort_keys=True))
+    elif args.command == "review-pdf":
         print(json.dumps(review_pdf(args.input, args.project_id, args.workspace), sort_keys=True))
     elif args.command == "review-project":
         pdf_report = review_pdf(args.input, args.project_id, args.workspace)
