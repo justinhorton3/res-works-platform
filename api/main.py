@@ -20,7 +20,7 @@ from res_works.fact_mapping import facts_from_geometry
 from res_works.plan_fixture import load_plan_geometry
 from res_works.recommendations import recommend_documentation
 from res_works.reports import build_validation_report
-from res_works.rule_catalog import load_requirements
+from res_works.rule_catalog import load_requirements, requirements_for_profile
 from res_works.jurisdiction import load_rule_profiles, resolve_rule_profile
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
@@ -123,7 +123,7 @@ def validate_project(project_id: str, snapshot_id: str, profile_id: str = "arkan
         profile = resolve_rule_profile(load_rule_profiles(Path("reference/jurisdiction-profiles.json")), profile_id)
         plan = load_plan_geometry(source)
         facts = facts_from_geometry(plan, project_id)
-        requirements = load_requirements(Path("reference/arkansas-baseline-requirements.json"))
+        requirements = requirements_for_profile(load_requirements(Path("reference/arkansas-baseline-requirements.json")), profile.id)
         report = build_validation_report(project_id, profile.id, requirements, facts, plan)
     except (ValueError, OSError, json.JSONDecodeError) as error:
         raise HTTPException(status_code=400, detail=str(error)) from error

@@ -6,7 +6,7 @@ from .ingest import ingest_artifact
 from .pdf_review import inventory_pdf
 from .pdf_render import render_pdf_pages
 from .validation import evaluate_requirement, evaluate_requirements
-from .rule_catalog import load_requirements
+from .rule_catalog import load_requirements, requirements_for_profile
 from .reports import build_validation_report
 from .geometry import validate_geometry
 from .caproj import caproj_contents_report, extract_native_files, inventory_caproj
