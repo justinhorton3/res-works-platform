@@ -1,6 +1,7 @@
 """Local RES Works HTTP service."""
 
 import json
+import shutil
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -114,6 +115,36 @@ async def upload_file(project_id: str, file: UploadFile = File(...)) -> dict[str
     repository.save_snapshot(snapshot)
     repository.close()
     return {"id": snapshot.id, "filename": snapshot.filename, "byte_size": snapshot.byte_size, "status": "stored"}
+
+
+@app.delete("/projects/{project_id}/snapshots/{snapshot_id}")
+def delete_snapshot(project_id: str, snapshot_id: str) -> dict[str, str]:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    snapshot = repository.get_snapshot(snapshot_id)
+    if snapshot is None or snapshot.project_id != project_id:
+        repository.close()
+        raise HTTPException(status_code=404, detail="Source snapshot not found")
+    repository.delete_snapshot(snapshot_id)
+    repository.close()
+    for path in (WORKSPACE / "incoming" / project_id / snapshot.filename, WORKSPACE / "snapshots" / f"{snapshot_id}-{snapshot.filename}"):
+        if path.is_file():
+            path.unlink()
+    shutil.rmtree(WORKSPACE / "extracted" / project_id / snapshot_id, ignore_errors=True)
+    return {"id": snapshot_id, "status": "deleted"}
+
+
+@app.delete("/projects/{project_id}/snapshots")
+def clear_snapshots(project_id: str) -> dict[str, int | str]:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    snapshots = repository.list_snapshots(project_id)
+    for snapshot in snapshots:
+        repository.delete_snapshot(snapshot.id)
+        for path in (WORKSPACE / "incoming" / project_id / snapshot.filename, WORKSPACE / "snapshots" / f"{snapshot.id}-{snapshot.filename}"):
+            if path.is_file():
+                path.unlink()
+        shutil.rmtree(WORKSPACE / "extracted" / project_id / snapshot.id, ignore_errors=True)
+    repository.close()
+    return {"project_id": project_id, "deleted": len(snapshots), "status": "cleared"}
 
 
 @app.post("/projects/{project_id}/runs")

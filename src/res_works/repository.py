@@ -169,6 +169,15 @@ class ProjectRepository:
         ).fetchall()
         return [SourceSnapshot.model_validate(json.loads(row["snapshot_json"])) for row in rows]
 
+    def delete_snapshot(self, snapshot_id: str) -> SourceSnapshot | None:
+        snapshot = self.get_snapshot(snapshot_id)
+        if snapshot is None:
+            return None
+        self._connection.execute("DELETE FROM page_evidence WHERE snapshot_id = ?", (snapshot_id,))
+        self._connection.execute("DELETE FROM source_snapshots WHERE id = ?", (snapshot_id,))
+        self._connection.commit()
+        return snapshot
+
     def save_analysis_run(self, run: AnalysisRun) -> None:
         encoded = json.dumps(run.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
         self._connection.execute(
