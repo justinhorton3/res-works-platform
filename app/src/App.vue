@@ -36,19 +36,19 @@ async function addFiles(selected) {
     form.append('file', file)
     try {
       const response = await fetch(`${apiBase}/projects/sweeter-build/files`, { method: 'POST', body: form })
-      if (!response.ok) throw new Error(`Upload failed (${response.status})`)
+      if (!response.ok) throw new Error(`Upload failed (${response.status}): ${await response.text()}`)
       const stored = await response.json()
       entry.snapshotId = stored.id
       entry.status = 'Complete'
       analysis.value = { status: 'Starting analysis…', snapshotId: stored.id }
       const runResponse = await fetch(`${apiBase}/projects/sweeter-build/runs?snapshot_id=${stored.id}`, { method: 'POST' })
-      if (!runResponse.ok) throw new Error(`Analysis failed (${runResponse.status})`)
+      if (!runResponse.ok) throw new Error(`Analysis failed (${runResponse.status}): ${await runResponse.text()}`)
       analysis.value = await runResponse.json()
       evidencePages.value = analysis.value.result?.evidence || []
       if (file.type === 'application/pdf') sourceUrl.value = `${apiBase}/projects/sweeter-build/snapshots/${stored.id}/source`
     } catch (error) {
-      entry.status = 'Failed'
-      apiError.value = error.message
+      entry.status = error.message.startsWith('Analysis failed') ? 'Stored; analysis failed' : 'Failed'
+      apiError.value = error.message || 'The local API could not complete the request.'
     }
   }
 }
