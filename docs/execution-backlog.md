@@ -25,7 +25,7 @@ and end-to-end acceptance remain incomplete.
 | M3 | Architectural extraction and cross-source reconciliation | In progress | 30% |
 | M4 | Controlled notes, callouts, details, and recommendations | In progress | 50% |
 | M5 | Designer approval and Chief handoff | In progress | 50% |
-| M6 | Arkansas and local-jurisdiction validation | In progress | 50% |
+| M6 | Arkansas and local-jurisdiction validation | In progress | 60% |
 | M7 | Final QA, watcher, and new-plan acceptance testing | Planned | 15% |
 
 ## User stories and acceptance criteria
@@ -93,14 +93,14 @@ and end-to-end acceptance remain incomplete.
 ### M6 — Rules and jurisdiction
 
 - **M6.1** As a reviewer, I can select project type, county, and municipality.
-  **In progress:** selectable profiles are exposed in the UI and the selected
-  profile is now passed into PLAN analysis.
+  **In progress:** selectable county and representative municipal profiles
+  are exposed in the UI and the selected profile is passed into PLAN analysis.
 - **M6.2** As a reviewer, I can evaluate adopted baseline and local overlays
   with source, edition, and verification date.
 - **M6.3** As a reviewer, I receive `pass`, `fail`, `not_verified`, or
   `professional_review_required`, never a guarantee of approval. **In
   progress:** the validation endpoint returns profile status and a clear AHJ
-  notice; municipality overlays and UI controls remain next.
+  notice; municipal overlays remain explicitly pending verification.
 
 ### M7 — Watcher and acceptance
 
