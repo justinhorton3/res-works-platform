@@ -1,6 +1,6 @@
 import pytest
 
-from res_works.jurisdiction import classify_project, load_rule_profiles, resolve_rule_profile
+from res_works.jurisdiction import classify_project, load_rule_profiles, profile_scope, resolve_rule_profile
 
 
 def test_classification_preserves_county_and_municipality() -> None:
@@ -34,3 +34,10 @@ def test_municipal_profiles_identify_inherited_county_and_pending_overlay() -> N
     assert profile.municipality == "Bentonville"
     assert profile.inherits_profile_id == "benton-county-baseline"
     assert profile.overlay_status == "pending"
+
+
+def test_profile_scope_never_marks_pending_overlay_verified() -> None:
+    profile = resolve_rule_profile(load_rule_profiles("reference/jurisdiction-profiles.json"), "benton-bentonville-overlay")
+    scope = profile_scope(profile)
+    assert scope["source_ids"] == ["arkansas-afpc-2021", "benton-county-regulations"]
+    assert scope["verified_for_approval"] is False

@@ -24,7 +24,7 @@ that any plan is permit-ready.
 | M3 | Architectural extraction and cross-source reconciliation | Complete | 100% |
 | M4 | Controlled notes, callouts, details, and recommendations | Complete | 100% |
 | M5 | Designer approval and Chief handoff | Complete | 100% |
-| M6 | Arkansas and local-jurisdiction validation | In progress | 33% |
+| M6 | Arkansas and local-jurisdiction validation | Complete | 100% |
 | M7 | Final QA, watcher, and new-plan acceptance testing | Complete | 100% |
 | M8 | Operational hardening | Complete | 100% |
 | M9 | Real-bundle integration | Complete | 100% |
@@ -98,14 +98,15 @@ that any plan is permit-ready.
 ### M6 — Rules and jurisdiction
 
 - **M6.1** As a reviewer, I can select project type, county, and municipality.
-  **In progress:** selectable county and representative municipal profiles
-  are exposed in the UI and the selected profile is passed into PLAN analysis.
+  **Done:** the selector and validation API route classification through the
+  selected profile.
 - **M6.2** As a reviewer, I can evaluate adopted baseline and local overlays
-  with source, edition, and verification date.
+  with source, edition, and verification date. **Done:** profile scope exposes
+  source IDs, inherited county overlays, and explicit verification state;
+  pending AHJ confirmation remains visible.
 - **M6.3** As a reviewer, I receive `pass`, `fail`, `not_verified`, or
-  `professional_review_required`, never a guarantee of approval. **In
-  progress:** the validation endpoint returns profile status and a clear AHJ
-  notice; municipal overlays remain explicitly pending verification.
+  `professional_review_required`, never a guarantee of approval. **Done:**
+  validation returns evidence-backed statuses plus a mandatory AHJ notice.
 
 ### M7 — Watcher and acceptance
 
@@ -166,7 +167,8 @@ provenance, failure state, documentation, and review instructions are all
 present. A build that merely displays an inventory is not evidence that the
 underlying architectural analysis is complete.
 
-## Next grouped delivery
+## Post-milestone operational work
 
-Next grouped delivery: complete M6.1–M6.3, including verified jurisdiction
-overlays and evidence-backed rule evaluation.
+The implementation milestones are complete. The owner must verify current code
+editions and local amendments with each AHJ before relying on a profile for a
+real permit submission.
