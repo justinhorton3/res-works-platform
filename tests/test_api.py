@@ -44,3 +44,12 @@ def test_source_endpoint_serves_uploaded_pdf(tmp_path) -> None:
     response = client.get(f"/projects/test/snapshots/{snapshot_id}/source")
     assert response.status_code == 200
     assert response.content == b"%PDF-1.4"
+
+
+def test_dwg_analysis_reports_conversion_boundary(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    client = TestClient(app)
+    upload = client.post("/projects/test/files", files={"file": ("plan.dwg", b"dwg", "application/octet-stream")})
+    response = client.post(f"/projects/test/runs?snapshot_id={upload.json()['id']}")
+    assert response.json()["result"]["unsupported"] is True

@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
 from res_works.models import AnalysisRun
+from res_works.caproj import inventory_caproj
+from res_works.dxf import inventory_dxf
+from res_works.dxf_extract import extract_architectural_entities
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
 
@@ -57,6 +60,15 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         for page in pages:
             repository.save_page_evidence(page)
         result = {"message": "PDF pages indexed for review", "pages": len(pages), "evidence": [page.model_dump(mode="json") for page in pages]}
+    elif source.suffix.lower() == ".caproj":
+        inventory = inventory_caproj(source)
+        result = {"message": "Chief package inventoried for review", "pages": 0, "inventory": inventory.model_dump(mode="json")}
+    elif source.suffix.lower() == ".dxf":
+        inventory = inventory_dxf(source)
+        entities = extract_architectural_entities(source)
+        result = {"message": "DXF geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities)}
+    elif source.suffix.lower() == ".dwg":
+        result = {"message": "DWG stored; conversion to DXF is required before analysis", "pages": 0, "unsupported": True}
     run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed")
     repository.save_analysis_run(run)
     repository.close()
