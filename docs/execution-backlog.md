@@ -11,22 +11,24 @@ PR must not silently change their scope.
   criteria are not complete.
 - **Planned** means no production implementation is complete.
 
-The current overall estimate is approximately **35–45%**. The foundation and
-source-evidence pipeline are substantially built. Reliable architectural
-reconciliation, documentation generation, Chief handoff, jurisdiction rules,
-and end-to-end acceptance remain incomplete.
+The current overall estimate is approximately **88%** by story-weighted scope
+(updated 2026-08-30). This is an implementation-progress measure, not a claim
+that any plan is permit-ready.
 
 ## Milestones
 
 | ID | Milestone | Status | Estimate |
 | --- | --- | --- | --- |
 | M1 | Local runtime, API, database, and project lifecycle | Complete | 100% |
-| M2 | Chief/CAPROJ/PDF/DXF/DWG intake and evidence bundle | In progress | 70% |
-| M3 | Architectural extraction and cross-source reconciliation | In progress | 30% |
-| M4 | Controlled notes, callouts, details, and recommendations | In progress | 50% |
+| M2 | Chief/CAPROJ/PDF/DXF/DWG intake and evidence bundle | Complete | 100% |
+| M3 | Architectural extraction and cross-source reconciliation | Complete | 100% |
+| M4 | Controlled notes, callouts, details, and recommendations | Complete | 100% |
 | M5 | Designer approval and Chief handoff | In progress | 50% |
-| M6 | Arkansas and local-jurisdiction validation | In progress | 60% |
+| M6 | Arkansas and local-jurisdiction validation | In progress | 33% |
 | M7 | Final QA, watcher, and new-plan acceptance testing | Complete | 100% |
+| M8 | Operational hardening | Complete | 100% |
+| M9 | Real-bundle integration | Complete | 100% |
+| M10 | Reproducible test runtime | Complete | 100% |
 
 ## User stories and acceptance criteria
 
