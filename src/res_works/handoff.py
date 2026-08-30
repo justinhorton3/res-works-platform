@@ -47,7 +47,11 @@ def build_change_set(
     )
 
 
-def build_chief_handoff(change_set: ChangeSet, chief_version: str = "X18") -> ChiefHandoff:
+def build_chief_handoff(
+    change_set: ChangeSet,
+    chief_version: str = "X18",
+    recommendations: list[Recommendation] | None = None,
+) -> ChiefHandoff:
     """Prepare instructions for supervised Chief editing; never write native files."""
     return ChiefHandoff(
         project_id=change_set.project_id,
@@ -55,6 +59,18 @@ def build_chief_handoff(change_set: ChangeSet, chief_version: str = "X18") -> Ch
         source_snapshot_id=change_set.source_snapshot_id,
         chief_version=chief_version,
         recommendation_ids=change_set.recommendation_ids,
+        items=[
+            {
+                "id": recommendation.id,
+                "title": recommendation.title,
+                "category": recommendation.category,
+                "proposed_text": recommendation.proposed_text,
+                "target_sheet": recommendation.target_sheet,
+                "source_refs": recommendation.source_refs,
+            }
+            for recommendation in (recommendations or [])
+            if recommendation.id in change_set.recommendation_ids
+        ],
         instructions=[
             "Open the matching Chief project and verify the active plan view.",
             "Apply only the approved recommendation IDs listed in this handoff.",
