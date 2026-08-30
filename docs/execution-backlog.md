@@ -93,10 +93,14 @@ and end-to-end acceptance remain incomplete.
 ### M6 — Rules and jurisdiction
 
 - **M6.1** As a reviewer, I can select project type, county, and municipality.
+  **In progress:** selectable Arkansas, Benton County, and Washington County
+  profiles are exposed by the API.
 - **M6.2** As a reviewer, I can evaluate adopted baseline and local overlays
   with source, edition, and verification date.
 - **M6.3** As a reviewer, I receive `pass`, `fail`, `not_verified`, or
-  `professional_review_required`, never a guarantee of approval.
+  `professional_review_required`, never a guarantee of approval. **In
+  progress:** the validation endpoint returns profile status and a clear AHJ
+  notice; municipality overlays and UI controls remain next.
 
 ### M7 — Watcher and acceptance
 

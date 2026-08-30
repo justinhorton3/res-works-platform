@@ -21,3 +21,8 @@ def test_profiles_are_explicitly_resolved_and_unverified_profiles_remain_unverif
     assert profile.status == "needs_ahj_confirmation"
     with pytest.raises(ValueError, match="Unknown jurisdiction profile"):
         resolve_rule_profile(profiles, "unknown")
+
+
+def test_all_profiles_require_explicit_ahj_confirmation() -> None:
+    profiles = load_rule_profiles("reference/jurisdiction-profiles.json")
+    assert {profile.status for profile in profiles} == {"needs_ahj_confirmation"}
