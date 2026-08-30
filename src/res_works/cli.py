@@ -13,7 +13,7 @@ from .repository import ProjectRepository
 from .reports import build_validation_report
 from .recommendations import recommend_documentation
 from .rule_catalog import load_requirements
-from .watcher import poll_exports
+from .watcher import poll_exports, watch_exports
 
 
 def review_pdf(input_path: str | Path, project_id: str, workspace: str | Path) -> dict[str, object]:
@@ -51,8 +51,17 @@ def main() -> None:
     project.add_argument("--documentation-library", type=Path, default=Path("reference/documentation-library.json"))
     watch = subparsers.add_parser("watch-once", help="scan a Chief export folder once")
     watch.add_argument("folder", type=Path)
+    loop = subparsers.add_parser("watch", help="watch a Chief export folder and emit changes")
+    loop.add_argument("folder", type=Path)
+    loop.add_argument("--interval", type=float, default=2.0)
+    loop.add_argument("--polls", type=int, default=1, help="number of polls; use 0 to run until interrupted")
     args = parser.parse_args()
-    if args.command == "watch-once":
+    if args.command == "watch":
+        changes = []
+        polls = args.polls or None
+        watch_exports(args.folder, changes.append, interval_seconds=args.interval, max_polls=polls)
+        print(json.dumps({"folder": str(args.folder), "polls": polls, "changes": [{"path": str(item.path), "byte_size": item.byte_size, "sha256": item.sha256} for item in changes]}, sort_keys=True))
+    elif args.command == "watch-once":
         state, changes = poll_exports(args.folder)
         print(json.dumps({"folder": str(args.folder), "observed": len(state), "changes": [{"path": str(item.path), "byte_size": item.byte_size, "sha256": item.sha256} for item in changes]}, sort_keys=True))
     elif args.command == "review-pdf":
