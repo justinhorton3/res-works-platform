@@ -171,10 +171,10 @@ class Recommendation(RESModel):
     id: str
     project_id: str
     documentation_item_id: str
-    title: str
-    category: Literal["general_note", "callout", "cad_detail", "structural_detail"]
-    proposed_text: str
     reason: str
+    title: str = ""
+    category: Literal["general_note", "callout", "cad_detail", "structural_detail"] = "callout"
+    proposed_text: str = ""
     evidence_fact_ids: list[str] = Field(default_factory=list)
     source_refs: list[str] = Field(default_factory=list)
     target_sheet: str | None = None
@@ -206,6 +206,7 @@ class ChiefHandoff(RESModel):
     chief_version: str = "X18"
     instructions: list[str] = Field(default_factory=list)
     recommendation_ids: list[str] = Field(default_factory=list)
+    items: list[dict[str, object]] = Field(default_factory=list)
     native_write_performed: bool = False
 
 

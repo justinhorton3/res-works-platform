@@ -18,12 +18,13 @@ def test_handoff_contains_only_explicitly_approved_recommendations() -> None:
         [ApprovalDecision(recommendation_id="rec-egress", decision="approve", decided_by="designer")],
     )
     change_set = build_change_set("sweeter-build", "snapshot-1", decided)
-    handoff = build_chief_handoff(change_set)
+    handoff = build_chief_handoff(change_set, recommendations=recommendations)
 
     assert change_set.recommendation_ids == ["rec-egress"]
     assert change_set.status == "draft"
     assert handoff.native_write_performed is False
     assert handoff.recommendation_ids == ["rec-egress"]
+    assert handoff.items[0]["id"] == "rec-egress"
     assert decided[1].status is ApprovalStatus.PROPOSED
 
 
