@@ -2,11 +2,16 @@ from pathlib import Path
 
 import ezdxf
 
-from res_works.dxf_extract import extract_architectural_entities, normalize_layer, summarize_dxf_evidence
+from res_works.dxf_extract import _feet_inches, extract_architectural_entities, normalize_layer, summarize_dxf_evidence
 
 
 def test_normalize_chief_layer_suffix() -> None:
     assert normalize_layer("Walls_  Normal-Interior-4-L2-1") == "Walls_  Normal-Interior-4-L2"
+
+
+def test_dimension_units_normalize_to_feet_and_inches() -> None:
+    assert _feet_inches(28.6667, 3) == "28'- 8\""
+    assert _feet_inches(342, 2) == "28'- 6\""
 
 
 def test_extract_architectural_entities_preserves_handles_and_raw_layers(tmp_path: Path) -> None:
