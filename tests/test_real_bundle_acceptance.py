@@ -42,6 +42,7 @@ def test_real_bundle_analyzes_caproj_pdf_and_dxf_together(tmp_path: Path) -> Non
     assert len(payload["evidence_bundle"]) == 3
     assert payload["bundle_analysis"]["pdf"][0]["pages"] == 1
     assert payload["bundle_analysis"]["pdf"][0]["page_references"] == [{"page_number": 1, "snapshot_id": uploads[1], "locator": "page 1"}]
+    assert payload["bundle_analysis"]["pdf"][0]["page_previews"] == [{"page_number": 1, "url": f"/projects/lot27/snapshots/{uploads[1]}/pages/1/preview"}]
     assert payload["bundle_analysis"]["geometry"][0]["evidence_summary"]["entity_count"] == 2
     assert payload["native_files"]["plan"]
     assert payload["native_files"]["layout"]
