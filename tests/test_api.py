@@ -53,3 +53,15 @@ def test_dwg_analysis_reports_conversion_boundary(tmp_path) -> None:
     upload = client.post("/projects/test/files", files={"file": ("plan.dwg", b"dwg", "application/octet-stream")})
     response = client.post(f"/projects/test/runs?snapshot_id={upload.json()['id']}")
     assert response.json()["result"]["unsupported"] is True
+
+
+def test_plan_json_analysis_returns_geometry_results(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    client = TestClient(app)
+    plan = {"envelope": {"x": 0, "y": 0, "width": 20, "depth": 20}, "rooms": [], "walls": [], "openings": [], "stairs": [], "porches": []}
+    upload = client.post("/projects/test/files", files={"file": ("plan.json", __import__('json').dumps(plan), "application/json")})
+    response = client.post(f"/projects/test/runs?snapshot_id={upload.json()['id']}")
+    assert response.status_code == 200
+    assert response.json()["result"]["fact_count"] >= 1
+    assert response.json()["result"]["geometry_errors"] == []
