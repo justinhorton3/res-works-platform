@@ -28,6 +28,19 @@ def recommendations_for_facts(project_id: str, facts: list[ObservedFact]) -> lis
     library = [DocumentationItem.model_validate(item) for item in json.loads(Path("reference/documentation-library.json").read_text())]
     return [item.model_dump(mode="json") for item in recommend_documentation(project_id, library, facts)]
 
+
+def evidence_coverage(snapshots: list[object]) -> dict[str, object]:
+    names = {getattr(item, "filename", "").lower() for item in snapshots}
+    has_dxf = any(name.endswith(".dxf") for name in names)
+    has_dwg = any(name.endswith(".dwg") for name in names)
+    has_pdf = any(name.endswith(".pdf") for name in names)
+    return {
+        "geometry": {"status": "available" if has_dxf or has_dwg else "missing", "sources": sorted(name for name in names if name.endswith((".dxf", ".dwg")))},
+        "visual": {"status": "available" if has_pdf else "missing", "sources": sorted(name for name in names if name.endswith(".pdf"))},
+        "schedules": {"status": "available" if has_pdf else "missing", "sources": sorted(name for name in names if name.endswith(".pdf"))},
+        "energy": {"status": "missing", "sources": []},
+    }
+
 app = FastAPI(title="RES Works API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
@@ -87,7 +100,8 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         inventory = inventory_caproj(source)
         extracted = extract_native_files(source, WORKSPACE / "extracted" / project_id / snapshot.id)
         facts = [ObservedFact(id="fact-chief-package", key="chief.package", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
-        result = {"message": "Chief package inventoried; additional exports required for analysis", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "evidence_bundle": evidence_bundle, "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
+        coverage = evidence_coverage(project_snapshots)
+        result = {"message": "Chief package inventoried; project evidence bundle detected", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "evidence_bundle": evidence_bundle, "evidence_coverage": coverage, "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dxf":
         inventory = inventory_dxf(source)
         entities = extract_architectural_entities(source)
