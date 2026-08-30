@@ -34,3 +34,4 @@ def test_summarize_dxf_evidence_reports_categories_and_text(tmp_path: Path) -> N
     summary = summarize_dxf_evidence(path)
     assert summary["categories"] == {"room_labels": 1}
     assert summary["text_samples"] == {"room_labels": ["Kitchen"]}
+    assert summary["dimensions"] == []
