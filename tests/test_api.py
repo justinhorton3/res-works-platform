@@ -76,3 +76,14 @@ def test_analysis_run_get_includes_persisted_result(tmp_path) -> None:
     response = client.get(f"/projects/test/runs/{run['id']}")
     assert response.status_code == 200
     assert response.json()["result"]["fact_count"] >= 1
+
+
+def test_analysis_runs_can_be_listed_for_reopening_project(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    client = TestClient(app)
+    upload = client.post("/projects/test/files", files={"file": ("plan.json", b'{"envelope":{"x":0,"y":0,"width":20,"depth":20},"rooms":[],"walls":[],"openings":[],"stairs":[],"porches":[]}', "application/json")})
+    client.post(f"/projects/test/runs?snapshot_id={upload.json()['id']}")
+    response = client.get("/projects/test/runs")
+    assert response.status_code == 200
+    assert len(response.json()) == 1
