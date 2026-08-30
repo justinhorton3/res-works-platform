@@ -74,6 +74,8 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
     if snapshot is None or snapshot.project_id != project_id:
         repository.close()
         raise HTTPException(status_code=404, detail="Source snapshot not found")
+    project_snapshots = repository.list_snapshots(project_id)
+    evidence_bundle = [{"snapshot_id": item.id, "filename": item.filename, "media_type": item.media_type, "byte_size": item.byte_size} for item in project_snapshots]
     source = WORKSPACE / "incoming" / project_id / snapshot.filename
     result: dict[str, object] = {"message": "Evidence snapshot ready for review", "pages": 0, "evidence": []}
     if snapshot.media_type == "application/pdf":
@@ -85,12 +87,12 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         inventory = inventory_caproj(source)
         extracted = extract_native_files(source, WORKSPACE / "extracted" / project_id / snapshot.id)
         facts = [ObservedFact(id="fact-chief-package", key="chief.package", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
-        result = {"message": "Chief package inventoried; additional exports required for analysis", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
+        result = {"message": "Chief package inventoried; additional exports required for analysis", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "evidence_bundle": evidence_bundle, "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dxf":
         inventory = inventory_dxf(source)
         entities = extract_architectural_entities(source)
         facts = [ObservedFact(id="fact-cad-dxf", key="cad.dxf", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
-        result = {"message": "DXF geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities), "fact_count": len(facts), "recommendations": recommendations_for_facts(project_id, facts)}
+        result = {"message": "DXF geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities), "fact_count": len(facts), "evidence_bundle": evidence_bundle, "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dwg":
         result = {"message": "DWG stored; conversion to DXF is required before analysis", "pages": 0, "unsupported": True}
     elif source.suffix.lower() == ".json":
