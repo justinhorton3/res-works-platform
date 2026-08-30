@@ -11,6 +11,8 @@ const apiError = ref('')
 const evidencePages = ref([])
 const sourceUrl = ref('')
 const decisions = ref({})
+const handoffText = ref('')
+const handoffCopied = ref(false)
 const selectedJurisdiction = ref('arkansas-baseline')
 const companionChecklist = computed(() => {
   const coverage = analysis.value?.result?.evidence_coverage
@@ -126,8 +128,16 @@ async function decide(id, decision) {
   if (!response.ok) { apiError.value = `Could not save decision (${response.status})`; return }
   decisions.value = { ...decisions.value, [id]: decision }
 }
-function downloadHandoff() {
-  if (analysis.value?.id) window.open(`${apiBase}/projects/sweeter-build/runs/${analysis.value.id}/handoff`, '_blank')
+async function showHandoff() {
+  if (!analysis.value?.id) return
+  const response = await fetch(`${apiBase}/projects/sweeter-build/runs/${analysis.value.id}/handoff?format=markdown`)
+  if (!response.ok) { apiError.value = `Could not load Chief handoff (${response.status})`; return }
+  handoffText.value = await response.text()
+  handoffCopied.value = false
+}
+async function copyHandoff() {
+  await navigator.clipboard.writeText(handoffText.value)
+  handoffCopied.value = true
 }
 async function createCheckpoint() {
   if (!analysis.value?.id) return
@@ -180,7 +190,7 @@ function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB
       <section v-if="analysis?.result?.bundle_analysis?.dimension_comparison" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 class="text-xl font-bold">Dimension comparison</h2><p class="mt-2 text-slate-500">{{ analysis.result.bundle_analysis.dimension_comparison.source_count }} DXF source(s) compared · {{ analysis.result.bundle_analysis.dimension_comparison.matched_source_count }} source(s) matched</p><div v-if="analysis.result.bundle_analysis.dimension_comparison.finding_count" class="mt-4 space-y-2"><div v-for="finding in analysis.result.bundle_analysis.dimension_comparison.findings" :key="finding" class="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{{ finding }}</div></div><div v-else class="mt-4 text-sm text-emerald-700">Repeated normalized dimensions found: {{ Object.keys(analysis.result.bundle_analysis.dimension_comparison.repeated_dimensions).length }}</div><div v-for="(items, value) in analysis.result.bundle_analysis.dimension_comparison.repeated_dimensions" :key="value" class="mt-3 rounded-lg bg-slate-50 p-3 text-sm"><span class="font-semibold">{{ value }}</span><span class="ml-2 text-slate-500">{{ items.map((item) => `${item.filename} (${item.handle || 'no handle'})`).join(' · ') }}</span></div></section>
       <section v-if="analysis?.result?.bundle_analysis?.geometry?.some((item) => item.preview_url)" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 class="text-xl font-bold">CAD preview</h2><p class="mt-2 text-slate-500">Local SVG preview of parsed DXF linework and labels. Chief remains authoritative.</p><div v-for="item in analysis.result.bundle_analysis.geometry.filter((entry) => entry.preview_url)" :key="item.snapshot_id" class="mt-5"><div class="mb-2 font-semibold">{{ item.filename }}</div><img :src="`http://127.0.0.1:8000${item.preview_url}`" :alt="`${item.filename} SVG preview`" class="max-h-[700px] w-full rounded-xl border border-slate-200 bg-white object-contain" /></div></section>
       <section v-if="analysis?.result?.recommendations?.length" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 class="text-xl font-bold">Recommended documentation</h2><p class="mt-2 text-slate-500">Review these proposed notes and callouts before applying anything in Chief Architect.</p><div v-for="item in analysis.result.recommendations" :key="item.id" class="mt-4 rounded-xl border border-orange-200 bg-orange-50 p-4"><div class="flex items-center justify-between"><div class="font-semibold">{{ item.title }}</div><span class="text-xs font-bold uppercase text-slate-500">{{ decisions[item.id] || item.status }}</span></div><p class="mt-2 text-sm text-slate-700">{{ item.proposed_text }}</p><p class="mt-2 text-xs text-slate-500">{{ item.category }} · Target: {{ item.target_sheet }} · Confidence: {{ item.confidence }}<span v-if="item.professional_review_required"> · Professional review required</span></p><p v-if="item.source_refs?.length" class="mt-1 text-xs text-slate-500">Evidence: {{ item.source_refs.join(', ') }}</p></div></section>
-      <section v-if="analysis?.id" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 class="text-xl font-bold">Chief handoff safety</h2><p class="mt-2 text-sm text-slate-600">Approved items can be downloaded as an editable checklist. Create a checkpoint before editing Chief.</p><div class="mt-4 flex gap-2"><button class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white" @click="downloadHandoff">Download Chief handoff</button><button class="rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700" @click="createCheckpoint">Create checkpoint</button></div></section>
+      <section v-if="analysis?.id" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 class="text-xl font-bold">Chief handoff safety</h2><p class="mt-2 text-sm text-slate-600">Review the editable checklist here, then copy/paste approved items into Chief. No download is required.</p><div class="mt-4 flex gap-2"><button class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white" @click="showHandoff">Show copyable handoff</button><button class="rounded-lg bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-700" @click="createCheckpoint">Create checkpoint</button></div><div v-if="handoffText" class="mt-4"><textarea v-model="handoffText" aria-label="Copyable Chief handoff" class="min-h-64 w-full rounded-xl border border-slate-300 bg-slate-50 p-4 font-mono text-xs text-slate-700"></textarea><button class="mt-2 rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white" @click="copyHandoff">{{ handoffCopied ? 'Copied' : 'Copy handoff' }}</button></div></section>
       <section v-if="analysis?.result?.bundle_analysis?.geometry?.some((item) => item.preview_url)" class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><h2 class="text-xl font-bold">Floor 1 SVG output</h2><p class="mt-2 text-sm text-slate-600">Architectural layers and dimensions are fitted to the Floor 1 plan view. Download the SVG for review or import into a graphics/CAD tool.</p><div v-for="item in analysis.result.bundle_analysis.geometry.filter((entry) => entry.preview_url)" :key="`download-${item.snapshot_id}`" class="mt-3"><a class="font-semibold text-blue-700 underline" :href="`${apiBase}${item.preview_url}`" download>{{ item.filename.replace(/\.dxf$/i, '.svg') }}</a></div></section>
     </section>
   </main>
