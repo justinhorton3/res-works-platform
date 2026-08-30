@@ -29,6 +29,7 @@ that any plan is permit-ready.
 | M8 | Operational hardening | Complete | 100% |
 | M9 | Real-bundle integration | Complete | 100% |
 | M10 | Reproducible test runtime | Complete | 100% |
+| M11 | Reviewer markup and amended review PDF | In progress | 50% |
 
 ## User stories and acceptance criteria
 
@@ -151,6 +152,26 @@ M9 is complete when the real-bundle test runs in the supported Python/Docker
 
 M10 is complete when the test profile builds, runs, and reports the suite
   independently of the runtime API image.
+
+### M11 - Reviewer markup and amended review PDF
+
+- **M11.1** As a reviewer, I can review sheets at a readable scale with a
+  right-side notes rail and continuous page scrolling. **Done:** the viewer
+  supports full-screen sheet review, zoom, page-specific notes, and persisted
+  run-scoped annotations.
+- **M11.2** As a reviewer, I can mark a specific plan location with an optional
+  note, arrow, or rectangle. **In progress:** note pins and coordinates exist;
+  arrow and rectangle editing remain to be completed.
+- **M11.3** As a reviewer, I can generate an amended PDF without changing the
+  original source. **Planned:** bake approved markups onto copied PDF pages,
+  preserve the source snapshot, and record an immutable revision timestamp.
+- **M11.4** As a reviewer, I can append a consolidated review page listing all
+  required changes, page references, statuses, and notes. **Planned:** render
+  the appendix into the amended PDF and retain its generation metadata.
+
+M11 is complete when annotations persist by run and page, amended PDFs render
+without clipping, the original source remains unchanged, and the appended
+review page reconciles every open item.
 
 ## Grouped PR policy
 
