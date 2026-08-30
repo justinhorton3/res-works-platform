@@ -180,7 +180,7 @@ def create_review_pdf(project_id: str, run_id: str) -> FileResponse:
     repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
     run = repository.get_analysis_run(run_id)
     annotations = repository.list_annotations(run_id) if run else []
-    snapshots = [repository.get_snapshot(snapshot_id) for snapshot_id in run.source_snapshot_ids] if run else []
+    snapshots = repository.list_snapshots(project_id) if run else []
     snapshot = next((item for item in snapshots if item and item.filename.lower().endswith(".pdf")), None)
     repository.close()
     if run is None or run.project_id != project_id or snapshot is None or not snapshot.filename.lower().endswith(".pdf"):

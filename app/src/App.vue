@@ -14,6 +14,8 @@ const selectedPdfPage = ref(null)
 const pdfZoom = ref(1)
 const annotationMode = ref(false)
 const annotations = ref([])
+const reviewPdfUrl = ref('')
+const reviewPdfError = ref('')
 const decisions = ref({})
 const handoffText = ref('')
 const handoffCopied = ref(false)
@@ -124,6 +126,14 @@ function openPdfPage(pdf, page) {
 function closePdfViewer() {
   selectedPdfPage.value = null
   annotationMode.value = false
+}
+async function createReviewPdf() {
+  if (!analysis.value?.id) return
+  reviewPdfError.value = ''
+  const response = await fetch(`${apiBase}/projects/sweeter-build/runs/${analysis.value.id}/review-pdf`, { method: 'POST' })
+  if (!response.ok) { reviewPdfError.value = `Could not create amended PDF (${response.status})`; return }
+  if (reviewPdfUrl.value) URL.revokeObjectURL(reviewPdfUrl.value)
+  reviewPdfUrl.value = URL.createObjectURL(await response.blob())
 }
 function addPdfAnnotation(event, page) {
   if (!annotationMode.value) return
