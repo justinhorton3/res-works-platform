@@ -1,6 +1,7 @@
 """Safe primitives for watching a local Chief export directory."""
 
 import hashlib
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -70,3 +71,23 @@ def poll_exports(
     current = [observe_file(path, include_hash=True) for path in discover_exports(folder)]
     state = {observation.path: observation for observation in current}
     return state, stable_changes(previous or {}, current)
+
+
+def watch_exports(
+    folder: str | Path,
+    on_change,
+    *,
+    interval_seconds: float = 2.0,
+    max_polls: int | None = None,
+) -> int:
+    """Poll until stopped, dispatching each stable export change once."""
+    previous: dict[Path, FileObservation] = {}
+    polls = 0
+    while max_polls is None or polls < max_polls:
+        previous, changes = poll_exports(folder, previous)
+        for observation in changes:
+            on_change(observation)
+        polls += 1
+        if max_polls is None or polls < max_polls:
+            time.sleep(interval_seconds)
+    return polls
