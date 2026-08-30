@@ -85,9 +85,12 @@ test('reopens the latest persisted analysis run', async ({ page }) => {
 })
 
 test('shows a completed failed analysis without losing the source row', async ({ page }) => {
+  let attempts = 0
   await page.route('http://127.0.0.1:8000/projects/sweeter-build/runs**', async (route) => {
     if (route.request().method() === 'GET') return route.fulfill({ json: [] })
-    await route.fulfill({ json: { id: 'run-failed', status: 'failed', result: { message: 'CAPROJ could not be read: invalid archive', pages: 0 } } })
+    attempts += 1
+    if (attempts === 1) return route.fulfill({ json: { id: 'run-failed', status: 'failed', result: { message: 'CAPROJ could not be read: invalid archive', pages: 0 } } })
+    await route.fulfill({ json: { id: 'run-retry', status: 'completed', result: { message: 'Recovered on retry', pages: 0 } } })
   })
   await page.route('http://127.0.0.1:8000/projects/sweeter-build/files**', (route) => route.fulfill({ json: { id: 'snapshot-caproj', filename: 'broken.caproj', byte_size: 10, status: 'stored' } }))
   await page.goto('/')
@@ -96,4 +99,7 @@ test('shows a completed failed analysis without losing the source row', async ({
   await (await chooser).setFiles({ name: 'broken.caproj', mimeType: 'application/octet-stream', buffer: Buffer.from('broken') })
   await expect(page.getByText('broken.caproj')).toBeVisible()
   await expect(page.getByText('CAPROJ could not be read: invalid archive')).toBeVisible()
+  await page.getByRole('button', { name: 'Retry analysis' }).click()
+  await expect(page.getByText('Recovered on retry')).toBeVisible()
+  expect(attempts).toBe(2)
 })
