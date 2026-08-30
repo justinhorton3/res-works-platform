@@ -11,7 +11,7 @@ from res_works.ingest import ingest_artifact
 from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, FactKind, ObservedFact
 from res_works.caproj import caproj_contents_report, extract_native_files, inventory_caproj
 from res_works.dxf import inventory_dxf
-from res_works.dxf_extract import extract_architectural_entities
+from res_works.dxf_extract import extract_architectural_entities, summarize_dxf_evidence
 from res_works.fact_mapping import facts_from_geometry
 from res_works.plan_fixture import load_plan_geometry
 from res_works.recommendations import recommend_documentation
@@ -56,7 +56,7 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
             categories: dict[str, int] = {}
             for entity in entities:
                 categories[entity.category] = categories.get(entity.category, 0) + 1
-            geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items()))})
+            geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items())), "evidence_summary": summarize_dxf_evidence(source)})
             if not inventory.dimension_count:
                 findings.append({"severity": "warning", "message": "DXF contains no DIMENSION entities; dimensional verification requires review.", "source_snapshot_id": item.id, "source_filename": item.filename})
         elif item.media_type == "application/pdf":

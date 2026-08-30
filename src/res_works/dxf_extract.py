@@ -55,3 +55,15 @@ def extract_architectural_entities(path: str | Path) -> list[DxfEntityRecord]:
             )
         )
     return records
+
+
+def summarize_dxf_evidence(path: str | Path) -> dict[str, object]:
+    """Return measurable CAD evidence without inventing room geometry."""
+    records = extract_architectural_entities(path)
+    categories: dict[str, int] = {}
+    text_samples: dict[str, list[str]] = {}
+    for record in records:
+        categories[record.category] = categories.get(record.category, 0) + 1
+        if record.text and len(text_samples.setdefault(record.category, [])) < 20:
+            text_samples[record.category].append(record.text.strip())
+    return {"entity_count": len(records), "categories": dict(sorted(categories.items())), "text_samples": text_samples}

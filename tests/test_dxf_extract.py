@@ -2,7 +2,7 @@ from pathlib import Path
 
 import ezdxf
 
-from res_works.dxf_extract import extract_architectural_entities, normalize_layer
+from res_works.dxf_extract import extract_architectural_entities, normalize_layer, summarize_dxf_evidence
 
 
 def test_normalize_chief_layer_suffix() -> None:
@@ -24,3 +24,13 @@ def test_extract_architectural_entities_preserves_handles_and_raw_layers(tmp_pat
     assert records[0].normalized_layer == "Walls_  Normal"
     assert records[0].handle
     assert records[1].text == "Living Room"
+
+
+def test_summarize_dxf_evidence_reports_categories_and_text(tmp_path: Path) -> None:
+    path = tmp_path / "plan.dxf"
+    document = ezdxf.new("R2018")
+    document.modelspace().add_text("Kitchen", dxfattribs={"layer": "Room Labels-1"})
+    document.saveas(path)
+    summary = summarize_dxf_evidence(path)
+    assert summary["categories"] == {"room_labels": 1}
+    assert summary["text_samples"] == {"room_labels": ["Kitchen"]}
