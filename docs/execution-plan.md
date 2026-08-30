@@ -176,6 +176,56 @@ Acceptance:
 
 ## Delivery phases
 
+## Active loop ledger
+
+This ledger is the working status view for the current implementation loop.
+Related work is grouped into one milestone and one pull request whenever
+possible; a PR should not be opened merely for a single field or UI label.
+
+### Dimension evidence milestone
+
+Source: Chief-derived DXF exports, with PDF/layout documents used for visual
+and sheet-level confirmation.
+
+Scope:
+
+- read DXF `DIMENSION` entities;
+- capture measured length, orientation, layer, and source handle;
+- normalize measurements to feet/inches for review;
+- display dimension evidence in the Review evidence UI;
+- compare repeated dimensions across full-floor and drawing-sheet exports;
+- flag missing or conflicting dimensions; and
+- add Lot 27 regression coverage.
+
+Acceptance criteria:
+
+- Every extracted dimension has a source snapshot and stable DXF handle.
+- A measurement is never presented as verified when its units or coordinate
+  alignment are unknown.
+- Full-floor and drawing-sheet exports are reported separately before any
+  comparison is made.
+- Missing, conflicting, or unparseable dimensions appear as review findings.
+- The UI shows counts and representative values without replacing the source
+  PDF/DXF evidence.
+- The milestone includes implementation, tests, build verification, and one
+  reviewable PR.
+
+Current status:
+
+- DXF dimension entities are extracted with handle, layer, measured value, and
+  override text.
+- CAPROJ, DXF, DWG, and PDF sources are associated in one project bundle.
+- Cross-source comparison and unit/coordinate reconciliation remain required
+  before dimensions can be treated as verified.
+
+Next grouped milestone:
+
+1. add unit and orientation normalization;
+2. compare multiple DXF sources by dimension evidence;
+3. add missing/conflict findings with source references;
+4. expose the complete dimension review in the UI; and
+5. run the full available test/build loop before one PR.
+
 ### Phase 0 — Repository and source foundation
 
 Status: in progress
