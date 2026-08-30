@@ -46,6 +46,7 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
     """Run the available source-specific analyzers for one project bundle."""
     geometry: list[dict[str, object]] = []
     pdfs: list[dict[str, object]] = []
+    findings: list[dict[str, object]] = []
     for item in snapshots:
         source = WORKSPACE / "incoming" / project_id / item.filename
         suffix = source.suffix.lower()
@@ -56,6 +57,8 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
             for entity in entities:
                 categories[entity.category] = categories.get(entity.category, 0) + 1
             geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items()))})
+            if not inventory.dimension_count:
+                findings.append({"severity": "warning", "message": "DXF contains no DIMENSION entities; dimensional verification requires review.", "source_snapshot_id": item.id, "source_filename": item.filename})
         elif item.media_type == "application/pdf":
             pages = inventory_pdf(source, item)
             for page in pages:
@@ -63,7 +66,13 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
                 repository.save_page_evidence(page)
                 repository.close()
             pdfs.append({"snapshot_id": item.id, "filename": item.filename, "pages": len(pages), "text_pages": sum(page.has_text for page in pages)})
-    return {"geometry": geometry, "pdf": pdfs, "finding_count": 0, "note": "Evidence is extracted and linked; cross-source conflict detection is the next analysis stage."}
+            if not any(page.has_text for page in pages):
+                findings.append({"severity": "info", "message": "PDF has no extractable text; visual page review is required.", "source_snapshot_id": item.id, "source_filename": item.filename})
+    if geometry and not pdfs:
+        findings.append({"severity": "warning", "message": "CAD geometry is present without a PDF reference for visual reconciliation."})
+    if pdfs and not geometry:
+        findings.append({"severity": "warning", "message": "PDF reference is present without DXF geometry for entity reconciliation."})
+    return {"geometry": geometry, "pdf": pdfs, "findings": findings, "finding_count": len(findings), "note": "Findings are linked to source files; dimensional and visual conflicts require confirmation."}
 
 app = FastAPI(title="RES Works API", version="0.1.0")
 app.add_middleware(
