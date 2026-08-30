@@ -106,8 +106,10 @@ and end-to-end acceptance remain incomplete.
 
 - **M7.1** As a designer, a stable Chief export change starts one reproducible
   analysis run without duplicates.
-- **M7.2** As a reviewer, Playwright covers upload, clear, analysis progress,
-  evidence findings, and reopening the latest run.
+- **M7.2** As a reviewer, Playwright covers upload, clear, jurisdiction status,
+  analysis progress, evidence findings, and reopening the latest run. **In
+  progress:** upload, empty state, clear, and jurisdiction status are covered;
+  real-source analysis and reopen coverage remain.
 - **M7.3** As a project owner, a new Lot 27 plan bundle passes the complete
   acceptance checklist with no mocked API responses.
 
