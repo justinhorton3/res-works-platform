@@ -4,20 +4,48 @@
     "jurisdiction": "Arkansas - baseline pending AHJ confirmation",
     "building_code": "2021 Arkansas Fire Prevention Code",
     "sources": ["arkansas-afpc-2021"],
-    "status": "needs_ahj_confirmation"
+    "status": "needs_ahj_confirmation", "overlay_status": "none"
   },
   {
     "id": "benton-county-baseline",
     "jurisdiction": "Benton County, Arkansas - baseline pending AHJ confirmation",
     "building_code": "2021 Arkansas Fire Prevention Code",
     "sources": ["arkansas-afpc-2021"],
-    "status": "needs_ahj_confirmation"
+    "status": "needs_ahj_confirmation", "county": "Benton", "overlay_status": "pending"
   },
   {
     "id": "washington-county-baseline",
     "jurisdiction": "Washington County, Arkansas - baseline pending AHJ confirmation",
     "building_code": "2021 Arkansas Fire Prevention Code",
     "sources": ["arkansas-afpc-2021"],
-    "status": "needs_ahj_confirmation"
+    "status": "needs_ahj_confirmation", "county": "Washington", "overlay_status": "pending"
+  },
+  {
+    "id": "benton-bentonville-overlay",
+    "jurisdiction": "Bentonville, Benton County, Arkansas - municipal overlay pending AHJ confirmation",
+    "building_code": "2021 Arkansas Fire Prevention Code plus Bentonville requirements",
+    "sources": ["arkansas-afpc-2021", "benton-county-regulations"],
+    "status": "needs_ahj_confirmation", "county": "Benton", "municipality": "Bentonville", "inherits_profile_id": "benton-county-baseline", "overlay_status": "pending"
+  },
+  {
+    "id": "benton-rogers-overlay",
+    "jurisdiction": "Rogers, Benton County, Arkansas - municipal overlay pending AHJ confirmation",
+    "building_code": "2021 Arkansas Fire Prevention Code plus Rogers requirements",
+    "sources": ["arkansas-afpc-2021"],
+    "status": "needs_ahj_confirmation", "county": "Benton", "municipality": "Rogers", "inherits_profile_id": "benton-county-baseline", "overlay_status": "pending"
+  },
+  {
+    "id": "washington-fayetteville-overlay",
+    "jurisdiction": "Fayetteville, Washington County, Arkansas - municipal overlay pending AHJ confirmation",
+    "building_code": "2021 Arkansas Fire Prevention Code plus Fayetteville requirements",
+    "sources": ["arkansas-afpc-2021", "washington-county-planning"],
+    "status": "needs_ahj_confirmation", "county": "Washington", "municipality": "Fayetteville", "inherits_profile_id": "washington-county-baseline", "overlay_status": "pending"
+  },
+  {
+    "id": "washington-springdale-overlay",
+    "jurisdiction": "Springdale, Washington County, Arkansas - municipal overlay pending AHJ confirmation",
+    "building_code": "2021 Arkansas Fire Prevention Code plus Springdale requirements",
+    "sources": ["arkansas-afpc-2021", "washington-county-planning"],
+    "status": "needs_ahj_confirmation", "county": "Washington", "municipality": "Springdale", "inherits_profile_id": "washington-county-baseline", "overlay_status": "pending"
   }
 ]

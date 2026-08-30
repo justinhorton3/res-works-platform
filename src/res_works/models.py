@@ -49,6 +49,10 @@ class RuleProfile(RESModel):
     building_code: str
     sources: list[str] = Field(default_factory=list)
     status: Literal["draft", "verified", "needs_ahj_confirmation"] = "draft"
+    county: str | None = None
+    municipality: str | None = None
+    inherits_profile_id: str | None = None
+    overlay_status: Literal["none", "pending", "verified"] = "none"
 
 
 class ProjectClassification(RESModel):

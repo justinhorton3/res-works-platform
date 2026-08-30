@@ -26,3 +26,11 @@ def test_profiles_are_explicitly_resolved_and_unverified_profiles_remain_unverif
 def test_all_profiles_require_explicit_ahj_confirmation() -> None:
     profiles = load_rule_profiles("reference/jurisdiction-profiles.json")
     assert {profile.status for profile in profiles} == {"needs_ahj_confirmation"}
+
+
+def test_municipal_profiles_identify_inherited_county_and_pending_overlay() -> None:
+    profiles = load_rule_profiles("reference/jurisdiction-profiles.json")
+    profile = resolve_rule_profile(profiles, "benton-bentonville-overlay")
+    assert profile.municipality == "Bentonville"
+    assert profile.inherits_profile_id == "benton-county-baseline"
+    assert profile.overlay_status == "pending"
