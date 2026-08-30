@@ -11,6 +11,18 @@ def test_health_endpoint() -> None:
     assert response.json()["status"] == "ok"
 
 
+def test_upload_rejects_same_artifact_under_a_different_project(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    client = TestClient(app)
+    source = {"file": ("plan.pdf", b"same-export", "application/pdf")}
+    first = client.post("/projects/project-a/files", files=source)
+    assert first.status_code == 200
+    second = client.post("/projects/project-b/files", files=source)
+    assert second.status_code == 409
+    assert "already associated with project 'project-a'" in second.json()["detail"]
+
+
 def test_validation_returns_project_classification_and_conservative_scope(tmp_path) -> None:
     import api.main as module
     module.WORKSPACE = tmp_path

@@ -164,6 +164,17 @@ async def upload_file(project_id: str, file: UploadFile = File(...)) -> dict[str
     target.write_bytes(await file.read())
     snapshot = ingest_artifact(target, project_id, WORKSPACE / "snapshots")
     repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    existing = repository.get_snapshot(snapshot.id)
+    if existing is not None and existing.project_id != project_id:
+        target.unlink(missing_ok=True)
+        repository.close()
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"This file is already associated with project '{existing.project_id}'. "
+                "Clear the source from that project or upload a distinct export."
+            ),
+        )
     repository.save_snapshot(snapshot)
     repository.close()
     return {"id": snapshot.id, "filename": snapshot.filename, "byte_size": snapshot.byte_size, "status": "stored"}
