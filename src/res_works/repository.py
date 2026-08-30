@@ -162,6 +162,13 @@ class ProjectRepository:
         ).fetchone()
         return SourceSnapshot.model_validate(json.loads(row["snapshot_json"])) if row else None
 
+    def list_snapshots(self, project_id: str) -> list[SourceSnapshot]:
+        rows = self._connection.execute(
+            "SELECT snapshot_json FROM source_snapshots WHERE json_extract(snapshot_json, '$.project_id') = ? ORDER BY rowid",
+            (project_id,),
+        ).fetchall()
+        return [SourceSnapshot.model_validate(json.loads(row["snapshot_json"])) for row in rows]
+
     def save_analysis_run(self, run: AnalysisRun) -> None:
         encoded = json.dumps(run.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
         self._connection.execute(
