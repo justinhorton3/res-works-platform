@@ -40,3 +40,23 @@ def observe_file(path: str | Path, *, include_hash: bool = False) -> FileObserva
 def is_stable(previous: FileObservation, current: FileObservation) -> bool:
     """Return true only when the same path and byte size persist between polls."""
     return previous.path == current.path and previous.byte_size == current.byte_size
+
+
+def stable_changes(
+    previous: dict[Path, FileObservation],
+    current: list[FileObservation],
+) -> list[FileObservation]:
+    """Return deterministic new/changed exports ready for one analysis trigger.
+
+    A same-sized rewrite is only considered changed when hashes are supplied
+    and differ. This prevents duplicate runs when a watcher sees the same
+    stable export on consecutive polls.
+    """
+    changed: list[FileObservation] = []
+    for observation in sorted(current, key=lambda item: item.path.name.lower()):
+        old = previous.get(observation.path)
+        if old is None or old.byte_size != observation.byte_size or (
+            old.sha256 is not None and observation.sha256 is not None and old.sha256 != observation.sha256
+        ):
+            changed.append(observation)
+    return changed

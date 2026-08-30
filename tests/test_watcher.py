@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from res_works.watcher import discover_exports, is_stable, observe_file
+from res_works.watcher import discover_exports, is_stable, observe_file, stable_changes
 
 
 def test_discover_exports_is_local_supported_and_deterministic(tmp_path: Path) -> None:
@@ -29,3 +29,13 @@ def test_stability_requires_same_path_and_size(tmp_path: Path) -> None:
 def test_observe_missing_file_fails_clearly(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError):
         observe_file(tmp_path / "missing.pdf")
+
+
+def test_stable_changes_deduplicates_repeated_observations(tmp_path: Path) -> None:
+    source = tmp_path / "export.dxf"
+    source.write_bytes(b"one")
+    first = observe_file(source, include_hash=True)
+    assert stable_changes({first.path: first}, [first]) == []
+    source.write_bytes(b"two!")
+    changed = observe_file(source, include_hash=True)
+    assert stable_changes({first.path: first}, [changed]) == [changed]
