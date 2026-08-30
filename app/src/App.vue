@@ -26,7 +26,11 @@ async function loadLatestAnalysis() {
 onMounted(loadLatestAnalysis)
 
 async function addFiles(selected) {
-  for (const file of Array.from(selected)) {
+  const selectedFiles = Array.from(selected)
+  const uploaded = []
+  apiError.value = ''
+  analysis.value = { status: 'Uploading source bundle…' }
+  for (const file of selectedFiles) {
     const entry = {
     id: `${file.name}-${file.lastModified}`,
     name: file.name,
@@ -42,17 +46,25 @@ async function addFiles(selected) {
       const stored = await response.json()
       entry.snapshotId = stored.id
       entry.status = 'Complete'
-      analysis.value = { status: 'Starting analysis…', snapshotId: stored.id }
-      const runResponse = await fetch(`${apiBase}/projects/sweeter-build/runs?snapshot_id=${stored.id}&profile_id=${selectedJurisdiction.value}`, { method: 'POST' })
-      if (!runResponse.ok) throw new Error(`Analysis failed (${runResponse.status}): ${await runResponse.text()}`)
-      analysis.value = await runResponse.json()
-      evidencePages.value = analysis.value.result?.evidence || []
-      if (file.type === 'application/pdf') sourceUrl.value = `${apiBase}/projects/sweeter-build/snapshots/${stored.id}/source`
+      uploaded.push({ file, stored })
     } catch (error) {
-      entry.status = error.message.startsWith('Analysis failed') ? 'Stored; analysis failed' : 'Failed'
+      entry.status = 'Failed'
       apiError.value = error.message || 'The local API could not complete the request.'
     }
   }
+  const lastUpload = uploaded.at(-1)
+  if (!lastUpload) { analysis.value = null; return }
+  analysis.value = { status: 'Starting analysis…', snapshotId: lastUpload.stored.id }
+  const runResponse = await fetch(`${apiBase}/projects/sweeter-build/runs?snapshot_id=${lastUpload.stored.id}&profile_id=${selectedJurisdiction.value}`, { method: 'POST' })
+  if (!runResponse.ok) {
+    analysis.value = { status: 'failed' }
+    apiError.value = `Analysis failed (${runResponse.status}): ${await runResponse.text()}`
+    return
+  }
+  analysis.value = await runResponse.json()
+  evidencePages.value = analysis.value.result?.evidence || []
+  const pdfUpload = uploaded.find(({ file }) => file.type === 'application/pdf')
+  if (pdfUpload) sourceUrl.value = `${apiBase}/projects/sweeter-build/snapshots/${pdfUpload.stored.id}/source`
 }
 
 async function removeFile(file) {
