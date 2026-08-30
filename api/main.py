@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
 from res_works.models import AnalysisRun
+from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
 
 WORKSPACE = Path("/data")
@@ -43,11 +44,22 @@ async def upload_file(project_id: str, file: UploadFile = File(...)) -> dict[str
 
 @app.post("/projects/{project_id}/runs")
 def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
-    run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed")
     repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    snapshot = repository.get_snapshot(snapshot_id)
+    if snapshot is None or snapshot.project_id != project_id:
+        repository.close()
+        raise HTTPException(status_code=404, detail="Source snapshot not found")
+    source = WORKSPACE / "incoming" / project_id / snapshot.filename
+    result: dict[str, object] = {"message": "Evidence snapshot ready for review", "pages": 0, "evidence": []}
+    if snapshot.media_type == "application/pdf":
+        pages = inventory_pdf(source, snapshot)
+        for page in pages:
+            repository.save_page_evidence(page)
+        result = {"message": "PDF pages indexed for review", "pages": len(pages), "evidence": [page.model_dump(mode="json") for page in pages]}
+    run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed")
     repository.save_analysis_run(run)
     repository.close()
-    return {"id": run.id, "status": run.status, "source_snapshot_ids": run.source_snapshot_ids, "result": {"message": "Evidence snapshot ready for review", "pages": 0}}
+    return {"id": run.id, "status": run.status, "source_snapshot_ids": run.source_snapshot_ids, "result": result}
 
 
 @app.get("/projects/{project_id}/runs/{run_id}")
