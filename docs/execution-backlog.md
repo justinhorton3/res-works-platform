@@ -57,12 +57,13 @@ and end-to-end acceptance remain incomplete.
 - **M3.1** As a reviewer, I can see DXF counts for walls, doors, windows,
   stairs, cabinets, plumbing, fireplaces, and room labels.
 - **M3.2** As a reviewer, I can inspect DXF dimensions with value, units,
-  orientation, layer, handle, and source snapshot.
+  orientation, layer, handle, and source snapshot. **Done:** normalized
+  dimension evidence retains source identity and handles.
 - **M3.3** As a reviewer, I can compare full-floor and drawing-sheet exports.
-  **Done:** differences in categories, dimensions, and source coverage become
-  findings with severity and provenance.
+  **Done:** repeated and unmatched normalized dimensions are reported with
+  source provenance and conservative review severity.
 - **M3.4** As a reviewer, I can reconcile CAD evidence with PDF pages.
-  **Done:** findings link to a source file and PDF page where available;
+  **Done:** indexed PDF page references are returned with snapshot identity;
   visual-only conclusions remain explicitly unverified.
 - **M3.5** As a reviewer, I can inspect a usable plan preview. **Done:** the
   preview preserves scale/orientation and clearly labels unsupported geometry.
@@ -166,6 +167,5 @@ underlying architectural analysis is complete.
 
 ## Next grouped delivery
 
-Complete M3.2–M3.4 together: dimension normalization, full-floor versus
-drawing-sheet comparison, PDF page links, conflict findings, and end-to-end
-tests using the Lot 27 bundle.
+Next grouped delivery: complete M3.5 with a scale-preserving, source-linked
+plan preview and then use it in the Lot 27 acceptance workflow.

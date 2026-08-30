@@ -7,7 +7,12 @@ from .models import DxfEntityRecord, DxfPlanComparison, PlanGeometry
 
 
 def compare_dimension_sets(sources: Iterable[dict[str, object]]) -> dict[str, object]:
-    """Compare normalized DXF dimensions while retaining source provenance."""
+    """Compare normalized DXF dimensions while retaining source provenance.
+
+    A repeated value is evidence of agreement only when it is present in more
+    than one source. Values that occur in only one source remain visible as
+    unmatched evidence; they are never treated as a conflict by themselves.
+    """
     source_list = list(sources)
     values: dict[str, list[dict[str, object]]] = {}
     for source in source_list:
@@ -15,11 +20,20 @@ def compare_dimension_sets(sources: Iterable[dict[str, object]]) -> dict[str, ob
             normalized = dimension.get("normalized") or dimension.get("display_text")
             if normalized:
                 values.setdefault(str(normalized), []).append({"filename": source["filename"], "handle": dimension.get("handle")})
-    repeated = {value: items for value, items in values.items() if len(items) > 1}
-    findings = []
+    repeated = {value: items for value, items in values.items() if len({item["filename"] for item in items}) > 1}
+    source_names = [str(source["filename"]) for source in source_list]
+    matched_sources = {item["filename"] for items in repeated.values() for item in items}
+    findings: list[str] = []
+    finding_details: list[dict[str, object]] = []
     if len(source_list) > 1 and not repeated:
-        findings.append("No repeated normalized dimensions were found across the supplied DXF sources.")
-    return {"source_count": len(source_list), "repeated_dimensions": repeated, "finding_count": len(findings), "findings": findings}
+        message = "No repeated normalized dimensions were found across the supplied DXF sources."
+        findings.append(message)
+        finding_details.append({"severity": "warning", "code": "no_cross_source_matches", "message": message, "sources": source_names})
+    elif len(source_list) > 1 and matched_sources != set(source_names):
+        message = "Some dimensions occur in only one DXF source and require sheet/floor alignment review."
+        findings.append(message)
+        finding_details.append({"severity": "info", "code": "unmatched_dimensions", "message": message, "sources": sorted(set(source_names) - matched_sources)})
+    return {"source_count": len(source_list), "repeated_dimensions": repeated, "finding_count": len(findings), "findings": findings, "finding_details": finding_details, "matched_source_count": len(matched_sources)}
 
 
 def compare_plan_to_dxf(
