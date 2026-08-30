@@ -45,3 +45,10 @@ def test_caproj_requires_manifest(tmp_path: Path) -> None:
         archive.writestr("readme.txt", "invalid")
     with pytest.raises(ValueError, match="manifest.json"):
         inventory_caproj(package)
+
+
+def test_caproj_rejects_non_zip_source(tmp_path: Path) -> None:
+    package = tmp_path / "broken.caproj"
+    package.write_bytes(b"not a caproj archive")
+    with pytest.raises(zipfile.BadZipFile):
+        inventory_caproj(package)

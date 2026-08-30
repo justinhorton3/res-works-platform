@@ -2,6 +2,7 @@
 
 import json
 import shutil
+import zipfile
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -193,7 +194,10 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         raise HTTPException(status_code=404, detail="Source snapshot not found")
     project_snapshots = repository.list_snapshots(project_id)
     evidence_bundle = [{"snapshot_id": item.id, "filename": item.filename, "media_type": item.media_type, "byte_size": item.byte_size} for item in project_snapshots]
-    bundle_analysis = analyze_project_bundle(project_id, project_snapshots)
+    try:
+        bundle_analysis = analyze_project_bundle(project_id, project_snapshots)
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        bundle_analysis = {"geometry": [], "pdf": [], "findings": [{"severity": "error", "message": f"Evidence analysis could not complete: {error}"}], "finding_count": 1, "note": "The source was stored; correct the source or export and retry analysis."}
     source = WORKSPACE / "incoming" / project_id / snapshot.filename
     result: dict[str, object] = {"message": "Evidence snapshot ready for review", "pages": 0, "evidence": []}
     if snapshot.media_type == "application/pdf":
@@ -202,8 +206,14 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
             repository.save_page_evidence(page)
         result = {"message": "Project evidence bundle indexed for review", "pages": len(pages), "evidence": [page.model_dump(mode="json") for page in pages], "evidence_bundle": evidence_bundle, "bundle_analysis": bundle_analysis}
     elif source.suffix.lower() == ".caproj":
-        inventory = inventory_caproj(source)
-        extracted = extract_native_files(source, WORKSPACE / "extracted" / project_id / snapshot.id)
+        try:
+            inventory = inventory_caproj(source)
+            extracted = extract_native_files(source, WORKSPACE / "extracted" / project_id / snapshot.id)
+        except (OSError, ValueError, zipfile.BadZipFile) as error:
+            run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="failed", result={"message": f"CAPROJ could not be read: {error}", "pages": 0, "unsupported": True, "evidence_bundle": evidence_bundle, "bundle_analysis": bundle_analysis})
+            repository.save_analysis_run(run)
+            repository.close()
+            return {"id": run.id, "status": run.status, "source_snapshot_ids": run.source_snapshot_ids, "result": run.result}
         facts = [ObservedFact(id="fact-chief-package", key="chief.package", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
         coverage = evidence_coverage(project_snapshots)
         result = {"message": "Chief package inventoried; project evidence bundle detected", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "evidence_bundle": evidence_bundle, "evidence_coverage": coverage, "bundle_analysis": bundle_analysis, "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
