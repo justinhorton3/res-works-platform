@@ -20,6 +20,7 @@ from res_works.plan_fixture import load_plan_geometry
 from res_works.recommendations import recommend_documentation
 from res_works.reports import build_validation_report
 from res_works.rule_catalog import load_requirements
+from res_works.jurisdiction import load_rule_profiles, resolve_rule_profile
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
 
@@ -97,6 +98,35 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "res-works-api"}
+
+
+@app.get("/jurisdictions")
+def list_jurisdictions() -> list[dict[str, object]]:
+    """List selectable profiles, including their conservative verification state."""
+    profiles = load_rule_profiles(Path("reference/jurisdiction-profiles.json"))
+    return [profile.model_dump(mode="json") for profile in profiles]
+
+
+@app.post("/projects/{project_id}/validation")
+def validate_project(project_id: str, snapshot_id: str, profile_id: str = "arkansas-baseline") -> dict[str, object]:
+    """Validate a JSON plan against an explicit jurisdiction profile."""
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    snapshot = repository.get_snapshot(snapshot_id)
+    repository.close()
+    if snapshot is None or snapshot.project_id != project_id:
+        raise HTTPException(status_code=404, detail="Source snapshot not found")
+    source = WORKSPACE / "incoming" / project_id / snapshot.filename
+    if source.suffix.lower() != ".json":
+        raise HTTPException(status_code=400, detail="Validation requires a PLAN JSON source")
+    try:
+        profile = resolve_rule_profile(load_rule_profiles(Path("reference/jurisdiction-profiles.json")), profile_id)
+        plan = load_plan_geometry(source)
+        facts = facts_from_geometry(plan, project_id)
+        requirements = load_requirements(Path("reference/arkansas-baseline-requirements.json"))
+        report = build_validation_report(project_id, profile.id, requirements, facts, plan)
+    except (ValueError, OSError, json.JSONDecodeError) as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    return {"profile": profile.model_dump(mode="json"), "classification_status": profile.status, "report": report.model_dump(mode="json"), "notice": "Results are evidence checks only; AHJ and professional review are required."}
 
 
 @app.post("/projects/{project_id}/recommendations/{recommendation_id}/decision")
