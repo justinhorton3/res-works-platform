@@ -41,6 +41,30 @@ def evidence_coverage(snapshots: list[object]) -> dict[str, object]:
         "energy": {"status": "missing", "sources": []},
     }
 
+
+def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str, object]:
+    """Run the available source-specific analyzers for one project bundle."""
+    geometry: list[dict[str, object]] = []
+    pdfs: list[dict[str, object]] = []
+    for item in snapshots:
+        source = WORKSPACE / "incoming" / project_id / item.filename
+        suffix = source.suffix.lower()
+        if suffix == ".dxf":
+            inventory = inventory_dxf(source)
+            entities = extract_architectural_entities(source)
+            categories: dict[str, int] = {}
+            for entity in entities:
+                categories[entity.category] = categories.get(entity.category, 0) + 1
+            geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items()))})
+        elif item.media_type == "application/pdf":
+            pages = inventory_pdf(source, item)
+            for page in pages:
+                repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+                repository.save_page_evidence(page)
+                repository.close()
+            pdfs.append({"snapshot_id": item.id, "filename": item.filename, "pages": len(pages), "text_pages": sum(page.has_text for page in pages)})
+    return {"geometry": geometry, "pdf": pdfs, "finding_count": 0, "note": "Evidence is extracted and linked; cross-source conflict detection is the next analysis stage."}
+
 app = FastAPI(title="RES Works API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
@@ -89,24 +113,25 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         raise HTTPException(status_code=404, detail="Source snapshot not found")
     project_snapshots = repository.list_snapshots(project_id)
     evidence_bundle = [{"snapshot_id": item.id, "filename": item.filename, "media_type": item.media_type, "byte_size": item.byte_size} for item in project_snapshots]
+    bundle_analysis = analyze_project_bundle(project_id, project_snapshots)
     source = WORKSPACE / "incoming" / project_id / snapshot.filename
     result: dict[str, object] = {"message": "Evidence snapshot ready for review", "pages": 0, "evidence": []}
     if snapshot.media_type == "application/pdf":
         pages = inventory_pdf(source, snapshot)
         for page in pages:
             repository.save_page_evidence(page)
-        result = {"message": "PDF pages indexed for review", "pages": len(pages), "evidence": [page.model_dump(mode="json") for page in pages]}
+        result = {"message": "Project evidence bundle indexed for review", "pages": len(pages), "evidence": [page.model_dump(mode="json") for page in pages], "evidence_bundle": evidence_bundle, "bundle_analysis": bundle_analysis}
     elif source.suffix.lower() == ".caproj":
         inventory = inventory_caproj(source)
         extracted = extract_native_files(source, WORKSPACE / "extracted" / project_id / snapshot.id)
         facts = [ObservedFact(id="fact-chief-package", key="chief.package", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
         coverage = evidence_coverage(project_snapshots)
-        result = {"message": "Chief package inventoried; project evidence bundle detected", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "evidence_bundle": evidence_bundle, "evidence_coverage": coverage, "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
+        result = {"message": "Chief package inventoried; project evidence bundle detected", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "evidence_bundle": evidence_bundle, "evidence_coverage": coverage, "bundle_analysis": bundle_analysis, "fact_count": 0, "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dxf":
         inventory = inventory_dxf(source)
         entities = extract_architectural_entities(source)
         facts = [ObservedFact(id="fact-cad-dxf", key="cad.dxf", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
-        result = {"message": "DXF geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities), "fact_count": len(facts), "evidence_bundle": evidence_bundle, "recommendations": recommendations_for_facts(project_id, facts)}
+        result = {"message": "Project geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities), "fact_count": len(facts), "evidence_bundle": evidence_bundle, "bundle_analysis": bundle_analysis, "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dwg":
         result = {"message": "DWG stored; conversion to DXF is required before analysis", "pages": 0, "unsupported": True}
     elif source.suffix.lower() == ".json":
