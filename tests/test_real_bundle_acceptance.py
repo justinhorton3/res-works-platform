@@ -47,4 +47,5 @@ def test_real_bundle_analyzes_caproj_pdf_and_dxf_together(tmp_path: Path) -> Non
     assert payload["native_files"]["plan"]
     assert payload["native_files"]["layout"]
     assert payload["evidence_coverage"]["geometry"]["status"] == "available"
+    assert payload["evidence_coverage"]["geometry"]["optional_sources"] == []
     assert payload["evidence_coverage"]["visual"]["status"] == "available"
