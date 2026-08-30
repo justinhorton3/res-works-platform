@@ -82,6 +82,7 @@ def summarize_dxf_evidence(path: str | Path) -> dict[str, object]:
         if record.text and len(text_samples.setdefault(record.category, [])) < 20:
             text_samples[record.category].append(record.text.strip())
     document = ezdxf.readfile(path)
+    units = document.header.get("$INSUNITS")
     for entity in document.modelspace():
         if entity.dxftype() != "DIMENSION":
             continue
