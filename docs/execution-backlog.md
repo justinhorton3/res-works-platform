@@ -109,9 +109,9 @@ and end-to-end acceptance remain incomplete.
   detection, hash-backed polling, a bounded `watch` CLI loop, and one-change
   dispatch are implemented; API run dispatch and production scheduling remain.
 - **M7.2** As a reviewer, Playwright covers upload, clear, jurisdiction status,
-  analysis progress, evidence findings, and reopening the latest run. **In
-  progress:** upload, empty state, clear, and jurisdiction status are covered;
-  real-source analysis and reopen coverage remain.
+  analysis progress, evidence findings, failure visibility, and reopening the
+  latest run. **In progress:** the UI acceptance suite covers these states;
+  real-source analysis against the Lot 27 bundle remains.
 - **M7.3** As a project owner, a new Lot 27 plan bundle passes the complete
   acceptance checklist with no mocked API responses.
 
