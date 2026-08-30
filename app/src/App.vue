@@ -41,7 +41,11 @@ async function loadLatestAnalysis() {
   if (!runs.length) return
   analysis.value = runs[runs.length - 1]
   evidencePages.value = analysis.value.result?.evidence || []
-  if (evidencePages.value.length) sourceUrl.value = `${apiBase}/projects/sweeter-build/snapshots/${analysis.value.source_snapshot_ids[0]}/source`
+  const bundle = analysis.value.result?.evidence_bundle || []
+  files.value = bundle.map((item) => ({ id: item.snapshot_id, snapshotId: item.snapshot_id, name: item.filename, size: item.byte_size, status: 'Complete' }))
+  const pdf = analysis.value.result?.bundle_analysis?.pdf?.[0]
+  if (pdf) sourceUrl.value = `${apiBase}/projects/sweeter-build/snapshots/${pdf.snapshot_id}/source`
+  else if (evidencePages.value.length) sourceUrl.value = `${apiBase}/projects/sweeter-build/snapshots/${analysis.value.source_snapshot_ids[0]}/source`
 }
 
 onMounted(loadLatestAnalysis)
