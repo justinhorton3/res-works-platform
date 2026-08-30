@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
-from res_works.models import AnalysisRun, DocumentationItem, FactKind, ObservedFact
+from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, FactKind, ObservedFact
 from res_works.caproj import inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities
@@ -17,7 +17,6 @@ from res_works.plan_fixture import load_plan_geometry
 from res_works.recommendations import recommend_documentation
 from res_works.reports import build_validation_report
 from res_works.rule_catalog import load_requirements
-from res_works.models import DocumentationItem, ObservedFact
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
 
@@ -41,6 +40,16 @@ app.add_middleware(
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "res-works-api"}
+
+
+@app.post("/projects/{project_id}/recommendations/{recommendation_id}/decision")
+def save_recommendation_decision(project_id: str, recommendation_id: str, decision: ApprovalDecision) -> ApprovalDecision:
+    if decision.recommendation_id != recommendation_id:
+        raise HTTPException(status_code=400, detail="Recommendation ID does not match path")
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    repository.save_approval_decision(decision)
+    repository.close()
+    return decision
 
 
 @app.post("/projects/{project_id}/files")

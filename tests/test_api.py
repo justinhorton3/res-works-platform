@@ -87,3 +87,13 @@ def test_analysis_runs_can_be_listed_for_reopening_project(tmp_path) -> None:
     response = client.get("/projects/test/runs")
     assert response.status_code == 200
     assert len(response.json()) == 1
+
+
+def test_recommendation_decision_is_saved_by_api(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    client = TestClient(app)
+    payload = {"recommendation_id": "rec-1", "decision": "approve", "decided_by": "designer"}
+    response = client.post("/projects/test/recommendations/rec-1/decision", json=payload)
+    assert response.status_code == 200
+    assert response.json()["decision"] == "approve"

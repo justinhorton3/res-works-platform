@@ -53,7 +53,11 @@ async function addFiles(selected) {
 }
 
 function removeFile(id) { files.value = files.value.filter((file) => file.id !== id) }
-function decide(id, decision) { decisions.value = { ...decisions.value, [id]: decision } }
+async function decide(id, decision) {
+  const response = await fetch(`${apiBase}/projects/sweeter-build/recommendations/${id}/decision`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recommendation_id: id, decision: decision === 'approved' ? 'approve' : decision === 'deferred' ? 'defer' : 'reject', decided_by: 'designer' }) })
+  if (!response.ok) { apiError.value = `Could not save decision (${response.status})`; return }
+  decisions.value = { ...decisions.value, [id]: decision }
+}
 function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB` }
 </script>
 
