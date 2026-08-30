@@ -20,6 +20,20 @@ def resolve_rule_profile(profiles: list[RuleProfile], profile_id: str) -> RulePr
     raise ValueError(f"Unknown jurisdiction profile: {profile_id}")
 
 
+def profile_scope(profile: RuleProfile) -> dict[str, object]:
+    """Return explicit scope metadata for conservative rule evaluation."""
+    return {
+        "profile_id": profile.id,
+        "county": profile.county,
+        "municipality": profile.municipality,
+        "building_code": profile.building_code,
+        "source_ids": profile.sources,
+        "profile_status": profile.status,
+        "overlay_status": profile.overlay_status,
+        "verified_for_approval": profile.status == "verified" and profile.overlay_status in {"none", "verified"},
+    }
+
+
 def classify_project(project_type: str, *, county: str, municipality: str | None = None) -> ProjectClassification:
     normalized = project_type.strip().lower()
     if normalized not in {"new_construction", "remodel", "addition"}:

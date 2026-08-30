@@ -21,7 +21,7 @@ from res_works.plan_fixture import load_plan_geometry
 from res_works.recommendations import recommend_documentation
 from res_works.reports import build_validation_report
 from res_works.rule_catalog import load_requirements, requirements_for_profile
-from res_works.jurisdiction import load_rule_profiles, resolve_rule_profile
+from res_works.jurisdiction import classify_project, load_rule_profiles, profile_scope, resolve_rule_profile
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
 from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_markdown
@@ -106,11 +106,11 @@ def health() -> dict[str, str]:
 def list_jurisdictions() -> list[dict[str, object]]:
     """List selectable profiles, including their conservative verification state."""
     profiles = load_rule_profiles(Path("reference/jurisdiction-profiles.json"))
-    return [profile.model_dump(mode="json") for profile in profiles]
+    return [{**profile.model_dump(mode="json"), "scope": profile_scope(profile)} for profile in profiles]
 
 
 @app.post("/projects/{project_id}/validation")
-def validate_project(project_id: str, snapshot_id: str, profile_id: str = "arkansas-baseline") -> dict[str, object]:
+def validate_project(project_id: str, snapshot_id: str, profile_id: str = "arkansas-baseline", project_type: str = "new_construction", county: str | None = None, municipality: str | None = None) -> dict[str, object]:
     """Validate a JSON plan against an explicit jurisdiction profile."""
     repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
     snapshot = repository.get_snapshot(snapshot_id)
@@ -122,13 +122,18 @@ def validate_project(project_id: str, snapshot_id: str, profile_id: str = "arkan
         raise HTTPException(status_code=400, detail="Validation requires a PLAN JSON source")
     try:
         profile = resolve_rule_profile(load_rule_profiles(Path("reference/jurisdiction-profiles.json")), profile_id)
+        classification = classify_project(project_type, county=county or profile.county or "Arkansas", municipality=municipality or profile.municipality)
         plan = load_plan_geometry(source)
         facts = facts_from_geometry(plan, project_id)
+        facts.extend([
+            ObservedFact(id="fact-project-residential", key="project.type", value="residential", kind=FactKind.OBSERVED, confidence="high"),
+            ObservedFact(id="fact-project-classification", key="project.project_type", value=classification.project_type, kind=FactKind.CONFIRMED, confidence="high"),
+        ])
         requirements = requirements_for_profile(load_requirements(Path("reference/arkansas-baseline-requirements.json")), profile.id)
         report = build_validation_report(project_id, profile.id, requirements, facts, plan)
     except (ValueError, OSError, json.JSONDecodeError) as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
-    return {"profile": profile.model_dump(mode="json"), "classification_status": profile.status, "report": report.model_dump(mode="json"), "notice": "Results are evidence checks only; AHJ and professional review are required."}
+    return {"profile": profile.model_dump(mode="json"), "scope": profile_scope(profile), "classification": classification.model_dump(mode="json"), "classification_status": profile.status, "report": report.model_dump(mode="json"), "notice": "Results are evidence checks only; AHJ and professional review are required."}
 
 
 @app.post("/projects/{project_id}/recommendations/{recommendation_id}/decision")

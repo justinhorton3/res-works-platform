@@ -11,6 +11,20 @@ def test_health_endpoint() -> None:
     assert response.json()["status"] == "ok"
 
 
+def test_validation_returns_project_classification_and_conservative_scope(tmp_path) -> None:
+    import api.main as module
+    module.WORKSPACE = tmp_path
+    source = b'{"envelope":{"x":0,"y":0,"width":20,"depth":20},"rooms":[],"walls":[],"openings":[],"stairs":[],"porches":[]}'
+    client = TestClient(app)
+    upload = client.post("/projects/test/files", files={"file": ("plan.json", source, "application/json")})
+    response = client.post(f"/projects/test/validation?snapshot_id={upload.json()['id']}&profile_id=benton-bentonville-overlay&project_type=remodel")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["classification"]["project_type"] == "remodel"
+    assert payload["scope"]["overlay_status"] == "pending"
+    assert payload["scope"]["verified_for_approval"] is False
+
+
 def test_analysis_run_endpoint_returns_completed_review_state(tmp_path) -> None:
     import api.main as module
     module.WORKSPACE = tmp_path

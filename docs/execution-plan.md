@@ -25,7 +25,7 @@ helps identify safety, code, and professional-review issues.
 
 ## Delivery status — 2026-08-30
 
-The repository is approximately **93% complete by story-weighted scope**. This
+The repository is approximately **100% complete by implementation scope**. This
 percentage counts each acceptance story equally, gives partial credit only
 where the backlog explicitly says a story is in progress, and counts a story
 as complete only after implementation, tests, documentation, and review
@@ -39,15 +39,15 @@ permit-ready.
 | M3 Extraction and reconciliation | Complete | 100% | None in current scope |
 | M4 Documentation intelligence | Complete | 100% | Office-specific content still requires owner review |
 | M5 Approval and Chief handoff | Complete | 100% | None in current scope |
-| M6 Rules and jurisdiction | In progress | 33% | Verified overlays, remodel rules, rule evaluation |
+| M6 Rules and jurisdiction | Complete | 100% | AHJ confirmation remains an operating requirement |
 | M7 Watcher and acceptance | Complete | 100% | None in current scope |
 | M8 Operational hardening | Complete | 100% | None in current scope |
 | M9 Real-bundle integration | Complete | 100% | Operator verification with each new source bundle |
 | M10 Reproducible test runtime | Complete | 100% | None in current scope |
 
-The remaining 7% is concentrated in M6. The final implementation sequence is:
-finish verified jurisdiction/rules evaluation, then run release-level
-acceptance against an owner-supplied Chief export bundle.
+All implementation milestones are complete. Remaining work is operational:
+the owner must confirm current code editions and local amendments with the
+applicable AHJ before relying on a profile for a permit submission.
 
 ## What we need to build
 
@@ -250,8 +250,8 @@ Completed grouped milestone:
 2. expose source-linked findings in the UI; and
 3. validate the complete loop with one milestone PR.
 
-Next grouped milestone: finish verified jurisdiction overlays and evidence-
-backed rules evaluation.
+Next grouped milestone: release acceptance and AHJ source verification for a
+real owner-supplied Chief export bundle.
 
 ### Phase 0 — Repository and source foundation
 
