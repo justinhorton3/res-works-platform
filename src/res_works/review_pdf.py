@@ -26,7 +26,14 @@ def build_review_pdf(source: str | Path, destination: str | Path, annotations: l
                 y = height - (annotation.y or 0) / 100 * height
                 canvas.setFillColorRGB(0.85, 0.05, 0.05)
                 canvas.setStrokeColorRGB(0.85, 0.05, 0.05)
-                canvas.circle(x, y, 8, fill=0)
+                if annotation.annotation_type == "rectangle":
+                    canvas.rect(x, y - 24, (annotation.width or 12) / 100 * width, (annotation.height or 8) / 100 * height, fill=0)
+                elif annotation.annotation_type == "arrow":
+                    canvas.line(x - 36, y + 36, x, y)
+                    canvas.line(x, y, x - 8, y + 2)
+                    canvas.line(x, y, x - 2, y + 8)
+                else:
+                    canvas.circle(x, y, 8, fill=0)
                 canvas.setFont("Helvetica", 9)
                 canvas.drawString(x + 10, y + 3, annotation.note[:120])
             canvas.save()
