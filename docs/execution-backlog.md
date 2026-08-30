@@ -106,8 +106,8 @@ and end-to-end acceptance remain incomplete.
 
 - **M7.1** As a designer, a stable Chief export change starts one reproducible
   analysis run without duplicates. **In progress:** deterministic stable-change
-  detection and a hash-backed one-poll operation are implemented; background
-  scheduling and run dispatch remain.
+  detection, a hash-backed one-poll operation, and a `watch-once` CLI command
+  are implemented; background scheduling and run dispatch remain.
 - **M7.2** As a reviewer, Playwright covers upload, clear, jurisdiction status,
   analysis progress, evidence findings, and reopening the latest run. **In
   progress:** upload, empty state, clear, and jurisdiction status are covered;

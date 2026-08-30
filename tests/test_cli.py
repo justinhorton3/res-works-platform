@@ -33,3 +33,12 @@ def test_review_pdf_command_persists_report(tmp_path: Path) -> None:
     assert report["project_id"] == "sweeter-build"
     assert report["pages"] == 1
     assert (tmp_path / "workspace/res-works.sqlite3").is_file()
+
+
+def test_watch_once_reports_supported_exports(tmp_path: Path) -> None:
+    source = tmp_path / "plan.dxf"
+    source.write_bytes(b"dxf")
+    result = subprocess.run([sys.executable, "-m", "res_works.cli", "watch-once", str(tmp_path)], check=True, capture_output=True, text=True)
+    report = json.loads(result.stdout)
+    assert report["observed"] == 1
+    assert report["changes"][0]["path"].endswith("plan.dxf")
