@@ -1,6 +1,6 @@
 """Typed, provider-independent domain models for the RES Works foundation."""
 
-from datetime import date
+from datetime import date, datetime, timezone
 from enum import StrEnum
 from typing import Literal
 
@@ -159,6 +159,21 @@ class PdfPageEvidence(RESModel):
     text: str
     character_count: int
     has_text: bool
+
+
+class ReviewAnnotation(RESModel):
+    id: str
+    run_id: str
+    snapshot_id: str
+    page_number: int
+    note: str
+    annotation_type: Literal["note", "arrow", "rectangle"] = "note"
+    x: float | None = None
+    y: float | None = None
+    width: float | None = None
+    height: float | None = None
+    author: str = "reviewer"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class PageRegion(RESModel):

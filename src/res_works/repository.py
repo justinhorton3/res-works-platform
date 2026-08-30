@@ -16,6 +16,7 @@ from .models import (
     Requirement,
     RuleProfile,
     SourceSnapshot,
+    ReviewAnnotation,
 )
 
 
@@ -76,6 +77,7 @@ class ProjectRepository:
         self._connection.execute("CREATE TABLE IF NOT EXISTS approval_decisions (recommendation_id TEXT PRIMARY KEY, decision_json TEXT NOT NULL)")
         self._connection.execute("CREATE TABLE IF NOT EXISTS approval_decision_history (id INTEGER PRIMARY KEY AUTOINCREMENT, recommendation_id TEXT NOT NULL, decision_json TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)")
         self._connection.execute("CREATE TABLE IF NOT EXISTS handoff_checkpoints (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, checkpoint_json TEXT NOT NULL)")
+        self._connection.execute("CREATE TABLE IF NOT EXISTS review_annotations (id TEXT PRIMARY KEY, run_id TEXT NOT NULL, annotation_json TEXT NOT NULL, created_at TEXT NOT NULL)")
         self._connection.execute(
             """CREATE TABLE IF NOT EXISTS documentation_items (
                 id TEXT PRIMARY KEY,
@@ -247,6 +249,14 @@ class ProjectRepository:
             (snapshot_id,),
         ).fetchall()
         return [PdfPageEvidence.model_validate(json.loads(row["evidence_json"])) for row in rows]
+
+    def save_annotation(self, annotation: ReviewAnnotation) -> None:
+        self._connection.execute("INSERT OR REPLACE INTO review_annotations(id, run_id, annotation_json, created_at) VALUES (?, ?, ?, ?)", (annotation.id, annotation.run_id, json.dumps(annotation.model_dump(mode="json"), sort_keys=True), annotation.created_at.isoformat()))
+        self._connection.commit()
+
+    def list_annotations(self, run_id: str) -> list[ReviewAnnotation]:
+        rows = self._connection.execute("SELECT annotation_json FROM review_annotations WHERE run_id = ? ORDER BY created_at, id", (run_id,)).fetchall()
+        return [ReviewAnnotation.model_validate(json.loads(row["annotation_json"])) for row in rows]
 
     def save_code_source(self, source: CodeSource) -> None:
         self._save_record("code_sources", source.id, source.model_dump(mode="json"))
