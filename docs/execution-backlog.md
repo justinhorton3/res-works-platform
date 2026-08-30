@@ -26,7 +26,7 @@ and end-to-end acceptance remain incomplete.
 | M4 | Controlled notes, callouts, details, and recommendations | In progress | 50% |
 | M5 | Designer approval and Chief handoff | In progress | 50% |
 | M6 | Arkansas and local-jurisdiction validation | In progress | 60% |
-| M7 | Final QA, watcher, and new-plan acceptance testing | In progress | 65% |
+| M7 | Final QA, watcher, and new-plan acceptance testing | In progress | 80% |
 
 ## User stories and acceptance criteria
 
@@ -117,6 +117,17 @@ and end-to-end acceptance remain incomplete.
   acceptance checklist with no mocked API responses. **In progress:** the
   checked-in manifest and PLAN fixture now have an acceptance test; real PDF,
   DXF, and CAPROJ bundle execution remains.
+
+### M8 — Operational hardening
+
+- **M8.1** As an operator, I can start the local stack with health-checked
+  service dependencies and documented smoke commands.
+- **M8.2** As a developer, I can distinguish deterministic UI tests from
+  real-file/API acceptance and know what remains to verify with Lot 27 exports.
+
+M8 is complete when Compose healthchecks, startup documentation, build checks,
+and the real-bundle acceptance procedure are present. It does not imply that
+the current implementation is permit-ready.
 
 ## Grouped PR policy
 

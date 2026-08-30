@@ -18,6 +18,8 @@ operational documentation for RES Works.
   acceptance criteria, and first implementation sprint.
 - [Execution backlog](execution-backlog.md) - grouped milestones, user
   stories, status estimates, acceptance criteria, and PR delivery rules.
+- [Testing](testing.md) - local build, Docker smoke, Playwright, and real-file
+  acceptance guidance.
 
 The remaining implementation is grouped into five reviewable commits in the
 execution plan, beginning with `.caproj` package intake and DXF/DWG geometry

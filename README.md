@@ -60,8 +60,8 @@ versioned after the MVP is validated.
 
 ## Getting started
 
-The repository is currently in its requirements and foundation phase. There is
-not yet an executable RES Works application.
+The repository includes a local Docker Compose application for the intake and
+review workflow. Native Chief editing remains supervised and local.
 
 ### Prerequisites
 
@@ -70,6 +70,29 @@ not yet an executable RES Works application.
 - Git;
 - a local, non-iCloud working directory for active Chief files; and
 - Codex or another MCP-capable development client for future local automation.
+
+### Start the local application
+
+From the repository root:
+
+```bash
+docker compose up --build
+```
+
+Open `http://localhost:5173/` for the review UI. The API health endpoint is
+`http://localhost:8000/health`; Compose waits for it before starting the UI.
+Stop the stack with `docker compose down`. Project data persists under the
+local `storage/` directory and should not be committed.
+
+Run the browser acceptance suite from `app/`:
+
+```bash
+npm run test:e2e
+```
+
+The browser suite uses deterministic test doubles for UI state transitions;
+API and fixture tests provide the server-side validation path. A complete
+real-file acceptance run still requires the operator's Lot 27 exports.
 
 ### Clone the repository
 

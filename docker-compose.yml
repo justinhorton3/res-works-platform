@@ -9,6 +9,11 @@ services:
       - ./storage:/data
     environment:
       RES_WORKSPACE: /data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
   app:
     build:
       context: .
@@ -16,4 +21,10 @@ services:
     ports:
       - "127.0.0.1:5173:5173"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5173/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
