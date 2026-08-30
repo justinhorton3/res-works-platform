@@ -129,6 +129,16 @@ M8 is complete when Compose healthchecks, startup documentation, build checks,
 and the real-bundle acceptance procedure are present. It does not imply that
 the current implementation is permit-ready.
 
+### M9 — Real-bundle integration
+
+- **M9.1** As a project owner, I can analyze CAPROJ, PDF, and DXF evidence
+  together through the API and verify native PLAN/LAYOUT provenance.
+- **M9.2** As a reviewer, I can use a repeatable no-mock Lot 27 bundle test
+  before accepting a release.
+
+M9 is complete when the real-bundle test runs in the supported Python/Docker
+  environment and the operator verifies the supplied Lot 27 exports.
+
 ## Grouped PR policy
 
 One PR should complete a coherent milestone or vertical slice, including its
