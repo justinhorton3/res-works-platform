@@ -13,6 +13,7 @@ from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, F
 from res_works.caproj import caproj_contents_report, extract_native_files, inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities, summarize_dxf_evidence
+from res_works.dxf_compare import compare_dimension_sets
 from res_works.fact_mapping import facts_from_geometry
 from res_works.plan_fixture import load_plan_geometry
 from res_works.recommendations import recommend_documentation
@@ -48,6 +49,7 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
     geometry: list[dict[str, object]] = []
     pdfs: list[dict[str, object]] = []
     findings: list[dict[str, object]] = []
+    dimension_sources: list[dict[str, object]] = []
     for item in snapshots:
         source = WORKSPACE / "incoming" / project_id / item.filename
         suffix = source.suffix.lower()
@@ -57,7 +59,9 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
             categories: dict[str, int] = {}
             for entity in entities:
                 categories[entity.category] = categories.get(entity.category, 0) + 1
-            geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items())), "evidence_summary": summarize_dxf_evidence(source)})
+            summary = summarize_dxf_evidence(source)
+            dimension_sources.append({"filename": item.filename, **summary})
+            geometry.append({"snapshot_id": item.id, "filename": item.filename, "inventory": inventory.model_dump(mode="json"), "entity_categories": dict(sorted(categories.items())), "evidence_summary": summary})
             if not inventory.dimension_count:
                 findings.append({"severity": "warning", "message": "DXF contains no DIMENSION entities; dimensional verification requires review.", "source_snapshot_id": item.id, "source_filename": item.filename})
         elif suffix == ".dwg":
@@ -76,7 +80,8 @@ def analyze_project_bundle(project_id: str, snapshots: list[object]) -> dict[str
         findings.append({"severity": "warning", "message": "CAD geometry is present without a PDF reference for visual reconciliation."})
     if pdfs and not geometry:
         findings.append({"severity": "warning", "message": "PDF reference is present without DXF geometry for entity reconciliation."})
-    return {"geometry": geometry, "pdf": pdfs, "findings": findings, "finding_count": len(findings), "note": "Findings are linked to source files; dimensional and visual conflicts require confirmation."}
+    dimension_comparison = compare_dimension_sets(dimension_sources)
+    return {"geometry": geometry, "pdf": pdfs, "dimension_comparison": dimension_comparison, "findings": findings, "finding_count": len(findings), "note": "Findings are linked to source files; dimensional and visual conflicts require confirmation."}
 
 app = FastAPI(title="RES Works API", version="0.1.0")
 app.add_middleware(

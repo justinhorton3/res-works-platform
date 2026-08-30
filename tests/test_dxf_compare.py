@@ -1,4 +1,4 @@
-from res_works.dxf_compare import compare_plan_to_dxf
+from res_works.dxf_compare import compare_dimension_sets, compare_plan_to_dxf
 from res_works.models import DxfEntityRecord, PlanGeometry, Rect, Room
 
 
@@ -12,3 +12,11 @@ def test_comparison_reports_categories_and_alignment_limitation() -> None:
     assert comparison.dxf_categories == {"walls": 1}
     assert comparison.plan_categories == []
     assert comparison.findings == ["Coordinate-system and floor/view alignment require review before geometric comparison."]
+
+
+def test_dimension_sets_preserve_repeated_source_handles() -> None:
+    result = compare_dimension_sets([
+        {"filename": "full.dxf", "dimensions": [{"normalized": '28\'- 8"', "handle": "A"}]},
+        {"filename": "sheet.dxf", "dimensions": [{"normalized": '28\'- 8"', "handle": "B"}]},
+    ])
+    assert result["repeated_dimensions"]['28\'- 8"'] == [{"filename": "full.dxf", "handle": "A"}, {"filename": "sheet.dxf", "handle": "B"}]

@@ -6,6 +6,22 @@ from collections.abc import Iterable
 from .models import DxfEntityRecord, DxfPlanComparison, PlanGeometry
 
 
+def compare_dimension_sets(sources: Iterable[dict[str, object]]) -> dict[str, object]:
+    """Compare normalized DXF dimensions while retaining source provenance."""
+    source_list = list(sources)
+    values: dict[str, list[dict[str, object]]] = {}
+    for source in source_list:
+        for dimension in source.get("dimensions", []):
+            normalized = dimension.get("normalized") or dimension.get("display_text")
+            if normalized:
+                values.setdefault(str(normalized), []).append({"filename": source["filename"], "handle": dimension.get("handle")})
+    repeated = {value: items for value, items in values.items() if len(items) > 1}
+    findings = []
+    if len(source_list) > 1 and not repeated:
+        findings.append("No repeated normalized dimensions were found across the supplied DXF sources.")
+    return {"source_count": len(source_list), "repeated_dimensions": repeated, "finding_count": len(findings), "findings": findings}
+
+
 def compare_plan_to_dxf(
     plan: PlanGeometry, plan_id: str, dxf_filename: str, records: Iterable[DxfEntityRecord]
 ) -> DxfPlanComparison:
