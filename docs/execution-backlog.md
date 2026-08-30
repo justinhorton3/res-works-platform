@@ -23,7 +23,7 @@ that any plan is permit-ready.
 | M2 | Chief/CAPROJ/PDF/DXF/DWG intake and evidence bundle | Complete | 100% |
 | M3 | Architectural extraction and cross-source reconciliation | Complete | 100% |
 | M4 | Controlled notes, callouts, details, and recommendations | Complete | 100% |
-| M5 | Designer approval and Chief handoff | In progress | 50% |
+| M5 | Designer approval and Chief handoff | Complete | 100% |
 | M6 | Arkansas and local-jurisdiction validation | In progress | 33% |
 | M7 | Final QA, watcher, and new-plan acceptance testing | Complete | 100% |
 | M8 | Operational hardening | Complete | 100% |
@@ -85,14 +85,15 @@ that any plan is permit-ready.
 ### M5 — Approval and Chief handoff
 
 - **M5.1** As a designer, I can approve, edit, defer, or reject each proposed
-  item with decision history.
+  item with decision history. **Done:** latest state and append-only decision
+  history are persisted and queryable.
 - **M5.2** As a designer, I can export an editable, sheet-targeted Chief
-  handoff checklist and CAD/detail package. **In progress:** the handoff now
-  carries approved item text, category, target sheet, and source references,
-  and can render a human-editable checklist; file download and checkpoint
-  recovery remain next in this milestone.
+  handoff checklist and CAD/detail package. **Done:** approved item text,
+  category, target sheet, source references, and a downloadable Markdown
+  checklist are produced without modifying native Chief files.
 - **M5.3** As a designer, I can create a checkpoint and recover before any
-  supervised write to Chief.
+  supervised write to Chief. **Done:** checkpoint creation and recovery are
+  explicit API operations and native writes remain prohibited.
 
 ### M6 — Rules and jurisdiction
 
@@ -167,5 +168,5 @@ underlying architectural analysis is complete.
 
 ## Next grouped delivery
 
-Next grouped delivery: complete M5.2–M5.3, providing downloadable Chief
-handoff packages and recoverable supervised-write checkpoints.
+Next grouped delivery: complete M6.1–M6.3, including verified jurisdiction
+overlays and evidence-backed rule evaluation.
