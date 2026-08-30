@@ -93,7 +93,7 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
             result = {"message": "Plan geometry validated for review", "pages": 0, "fact_count": len(facts), "geometry_errors": report.geometry_errors, "validation": report.model_dump(mode="json"), "recommendations": recommendations}
         except (ValueError, OSError, json.JSONDecodeError) as error:
             result = {"message": f"Plan JSON could not be analyzed: {error}", "pages": 0, "unsupported": True}
-    run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed")
+    run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed", result=result)
     repository.save_analysis_run(run)
     repository.close()
     return {"id": run.id, "status": run.status, "source_snapshot_ids": run.source_snapshot_ids, "result": result}

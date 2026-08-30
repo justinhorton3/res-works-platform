@@ -138,6 +138,7 @@ class AnalysisRun(RESModel):
     status: Literal["queued", "running", "completed", "failed"] = "queued"
     report_path: str | None = None
     recommendation_path: str | None = None
+    result: dict[str, object] = Field(default_factory=dict)
 
 
 class EvidenceReference(RESModel):
