@@ -4,15 +4,35 @@ import { ref } from 'vue'
 const files = ref([])
 const input = ref(null)
 const supported = '.caproj,.plan,.layout,.pdf,.dxf,.dwg'
+const apiBase = 'http://127.0.0.1:8000'
+const analysis = ref(null)
+const apiError = ref('')
 
-function addFiles(selected) {
-  files.value.push(...Array.from(selected).map((file) => ({
+async function addFiles(selected) {
+  for (const file of Array.from(selected)) {
+    const entry = {
     id: `${file.name}-${file.lastModified}`,
     name: file.name,
     size: file.size,
     status: 'Uploading',
-  })))
-  files.value.forEach((file) => { window.setTimeout(() => { file.status = 'Complete' }, 350) })
+    }
+    files.value.push(entry)
+    const form = new FormData()
+    form.append('file', file)
+    try {
+      const response = await fetch(`${apiBase}/projects/sweeter-build/files`, { method: 'POST', body: form })
+      if (!response.ok) throw new Error(`Upload failed (${response.status})`)
+      const stored = await response.json()
+      entry.status = 'Complete'
+      analysis.value = { status: 'Starting analysis…', snapshotId: stored.id }
+      const runResponse = await fetch(`${apiBase}/projects/sweeter-build/runs?snapshot_id=${stored.id}`, { method: 'POST' })
+      if (!runResponse.ok) throw new Error(`Analysis failed (${runResponse.status})`)
+      analysis.value = await runResponse.json()
+    } catch (error) {
+      entry.status = 'Failed'
+      apiError.value = error.message
+    }
+  }
 }
 
 function removeFile(id) { files.value = files.value.filter((file) => file.id !== id) }
@@ -39,7 +59,7 @@ function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB
           <div v-for="file in files" :key="file.id" class="flex items-center gap-4 p-4"><div class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500">{{ file.name.split('.').pop().toUpperCase() }}</div><div class="min-w-0 flex-1"><div class="truncate font-semibold">{{ file.name }}</div><div class="text-sm text-slate-400">{{ formatSize(file.size) }} · {{ file.status }}</div></div><button class="text-sm text-slate-400 hover:text-red-500" @click="removeFile(file.id)">Remove</button></div>
         </div>
       </section>
-      <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><div class="flex justify-between"><div><h2 class="text-2xl font-bold">2. Review evidence</h2><p class="mt-2 text-slate-400">PDF pages, geometry findings, and documentation recommendations will appear here.</p></div><span class="text-2xl font-bold text-slate-200">02</span></div><div class="mt-8 flex min-h-40 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">No analysis run yet</div></section>
+      <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm"><div class="flex justify-between"><div><h2 class="text-2xl font-bold">2. Review evidence</h2><p class="mt-2 text-slate-400">PDF pages, geometry findings, and documentation recommendations will appear here.</p></div><span class="text-2xl font-bold text-slate-200">02</span></div><div v-if="apiError" class="mt-6 rounded-xl bg-red-50 p-4 text-red-700">{{ apiError }}</div><div v-else-if="analysis" class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6"><div class="flex items-center justify-between"><span class="font-semibold">Analysis run</span><span class="font-bold text-emerald-700">{{ analysis.status }}</span></div><p v-if="analysis.result" class="mt-3 text-emerald-800">{{ analysis.result.message }} · {{ analysis.result.pages }} pages indexed</p></div><div v-else class="mt-8 flex min-h-40 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 text-slate-400">Upload a source file to start an analysis run</div></section>
     </section>
   </main>
 </template>

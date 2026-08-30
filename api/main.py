@@ -6,6 +6,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
+from res_works.models import AnalysisRun
 from res_works.repository import ProjectRepository
 
 WORKSPACE = Path("/data")
@@ -38,3 +39,22 @@ async def upload_file(project_id: str, file: UploadFile = File(...)) -> dict[str
     repository.save_snapshot(snapshot)
     repository.close()
     return {"id": snapshot.id, "filename": snapshot.filename, "byte_size": snapshot.byte_size, "status": "stored"}
+
+
+@app.post("/projects/{project_id}/runs")
+def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
+    run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed")
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    repository.save_analysis_run(run)
+    repository.close()
+    return {"id": run.id, "status": run.status, "source_snapshot_ids": run.source_snapshot_ids, "result": {"message": "Evidence snapshot ready for review", "pages": 0}}
+
+
+@app.get("/projects/{project_id}/runs/{run_id}")
+def get_analysis(project_id: str, run_id: str) -> AnalysisRun:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    run = repository.get_analysis_run(run_id)
+    repository.close()
+    if run is None or run.project_id != project_id:
+        raise HTTPException(status_code=404, detail="Analysis run not found")
+    return run
