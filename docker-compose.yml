@@ -28,3 +28,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+  test:
+    profiles: ["test"]
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    command: ["python", "-m", "pytest", "-q"]

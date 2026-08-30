@@ -139,6 +139,16 @@ the current implementation is permit-ready.
 M9 is complete when the real-bundle test runs in the supported Python/Docker
   environment and the operator verifies the supplied Lot 27 exports.
 
+### M10 — Reproducible test runtime
+
+- **M10.1** As a developer, I can run the complete Python suite in the same
+  supported Python 3.12 family as the API without host dependency drift.
+- **M10.2** As a project owner, I can run the real-bundle acceptance test from
+  Docker and retain its output as release evidence.
+
+M10 is complete when the test profile builds, runs, and reports the suite
+  independently of the runtime API image.
+
 ## Grouped PR policy
 
 One PR should complete a coherent milestone or vertical slice, including its
