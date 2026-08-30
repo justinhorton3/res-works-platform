@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
 from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, FactKind, ObservedFact
-from res_works.caproj import extract_native_files, inventory_caproj
+from res_works.caproj import caproj_contents_report, extract_native_files, inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities
 from res_works.fact_mapping import facts_from_geometry
@@ -85,7 +85,7 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         inventory = inventory_caproj(source)
         extracted = extract_native_files(source, WORKSPACE / "extracted" / project_id / snapshot.id)
         facts = [ObservedFact(id="fact-chief-package", key="chief.package", value=True, kind=FactKind.OBSERVED, source_ref=snapshot.id, confidence="high")]
-        result = {"message": "Chief package extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "fact_count": len(facts), "recommendations": recommendations_for_facts(project_id, facts)}
+        result = {"message": "Chief package extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "native_files": extracted, "contents_report": caproj_contents_report(inventory), "fact_count": len(facts), "recommendations": recommendations_for_facts(project_id, facts)}
     elif source.suffix.lower() == ".dxf":
         inventory = inventory_dxf(source)
         entities = extract_architectural_entities(source)

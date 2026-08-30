@@ -9,6 +9,31 @@ from pathlib import Path
 from .models import CaprojInventory
 
 
+def caproj_contents_report(inventory: CaprojInventory) -> dict[str, object]:
+    """Describe what the package can support and which exports are still needed."""
+    available = []
+    if inventory.native_plan_files:
+        available.append("native plan container")
+    if inventory.native_layout_files:
+        available.append("native layout sheets")
+    if inventory.resource_extensions.get("json"):
+        available.append("package manifest metadata")
+    return {
+        "available": available,
+        "native_artifacts": {
+            "plan": inventory.native_plan_files,
+            "layout": inventory.native_layout_files,
+        },
+        "requires_chief_export": [
+            {"kind": "geometry", "export": "Export All Floors (DWG/DXF)", "purpose": "walls, doors, windows, dimensions, stairs, and CAD entities"},
+            {"kind": "schedules", "export": "PDF or schedule export", "purpose": "room, door/window, cabinet, fixture, and material schedules"},
+            {"kind": "energy", "export": "Thermal Envelope Data or RESCheck", "purpose": "envelope and energy evidence"},
+            {"kind": "visual", "export": "Export PDF", "purpose": "page-level visual verification and annotations"},
+        ],
+        "limitations": ["PLAN and LAYOUT are proprietary binary formats; their contents are preserved but not interpreted as structured geometry yet."],
+    }
+
+
 def extract_native_files(path: str | Path, destination: str | Path) -> dict[str, list[dict[str, object]]]:
     """Extract native Chief plan/layout members for downstream analysis.
 
