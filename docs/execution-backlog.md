@@ -26,7 +26,7 @@ and end-to-end acceptance remain incomplete.
 | M4 | Controlled notes, callouts, details, and recommendations | In progress | 50% |
 | M5 | Designer approval and Chief handoff | In progress | 50% |
 | M6 | Arkansas and local-jurisdiction validation | In progress | 60% |
-| M7 | Final QA, watcher, and new-plan acceptance testing | Planned | 15% |
+| M7 | Final QA, watcher, and new-plan acceptance testing | In progress | 65% |
 
 ## User stories and acceptance criteria
 
@@ -111,9 +111,12 @@ and end-to-end acceptance remain incomplete.
 - **M7.2** As a reviewer, Playwright covers upload, clear, jurisdiction status,
   analysis progress, evidence findings, failure visibility, and reopening the
   latest run. **In progress:** the UI acceptance suite covers these states;
-  real-source analysis against the Lot 27 bundle remains.
+  real-source fixture acceptance is now covered; a running Docker-backed
+  analysis against the full uploaded bundle remains.
 - **M7.3** As a project owner, a new Lot 27 plan bundle passes the complete
-  acceptance checklist with no mocked API responses.
+  acceptance checklist with no mocked API responses. **In progress:** the
+  checked-in manifest and PLAN fixture now have an acceptance test; real PDF,
+  DXF, and CAPROJ bundle execution remains.
 
 ## Grouped PR policy
 
