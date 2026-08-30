@@ -1,5 +1,6 @@
 """Local RES Works HTTP service."""
 
+import json
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -11,6 +12,12 @@ from res_works.models import AnalysisRun
 from res_works.caproj import inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities
+from res_works.fact_mapping import facts_from_geometry
+from res_works.plan_fixture import load_plan_geometry
+from res_works.recommendations import recommend_documentation
+from res_works.reports import build_validation_report
+from res_works.rule_catalog import load_requirements
+from res_works.models import DocumentationItem, ObservedFact
 from res_works.pdf_review import inventory_pdf
 from res_works.repository import ProjectRepository
 
@@ -69,6 +76,17 @@ def start_analysis(project_id: str, snapshot_id: str) -> dict[str, object]:
         result = {"message": "DXF geometry evidence extracted for review", "pages": 0, "inventory": inventory.model_dump(mode="json"), "architectural_entity_count": len(entities)}
     elif source.suffix.lower() == ".dwg":
         result = {"message": "DWG stored; conversion to DXF is required before analysis", "pages": 0, "unsupported": True}
+    elif source.suffix.lower() == ".json":
+        try:
+            plan = load_plan_geometry(source)
+            facts = facts_from_geometry(plan, project_id)
+            requirements = load_requirements(Path("reference/arkansas-baseline-requirements.json"))
+            report = build_validation_report(project_id, "arkansas-baseline", requirements, facts, plan)
+            library = [DocumentationItem.model_validate(item) for item in json.loads(Path("reference/documentation-library.json").read_text())]
+            recommendations = recommend_documentation(project_id, library, facts)
+            result = {"message": "Plan geometry validated for review", "pages": 0, "fact_count": len(facts), "geometry_errors": report.geometry_errors, "validation": report.model_dump(mode="json"), "recommendations": [item.model_dump(mode="json") for item in recommendations]}
+        except (ValueError, OSError, json.JSONDecodeError) as error:
+            result = {"message": f"Plan JSON could not be analyzed: {error}", "pages": 0, "unsupported": True}
     run = AnalysisRun(id=f"run-{snapshot_id[:16]}", project_id=project_id, source_snapshot_ids=[snapshot_id], status="completed")
     repository.save_analysis_run(run)
     repository.close()
