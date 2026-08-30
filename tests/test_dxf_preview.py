@@ -2,7 +2,11 @@ from pathlib import Path
 
 import ezdxf
 
-from res_works.dxf_preview import render_dxf_preview
+from res_works.dxf_preview import clean_chief_text, render_dxf_preview
+
+
+def test_clean_chief_text_removes_inline_formatting() -> None:
+    assert clean_chief_text(r"\fChief Blueprint|b0|i0|c0|p0;KITCHEN\P19'-6\" X 16'") == 'KITCHEN 19\'-6" X 16\''
 
 
 def test_render_dxf_preview_creates_svg_with_geometry_and_labels(tmp_path: Path) -> None:
