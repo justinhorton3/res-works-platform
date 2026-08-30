@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import JurisdictionPanel from './JurisdictionPanel.vue'
 
 const files = ref([])
 const input = ref(null)
@@ -86,6 +87,7 @@ function formatSize(bytes) { return `${Math.max(1, Math.round(bytes / 1024))} KB
     </header>
     <section class="mx-auto max-w-6xl space-y-8 px-8 py-12">
       <div><p class="text-xs font-bold tracking-[0.3em] text-slate-400">PROJECT WORKSPACE</p><h1 class="mt-3 text-5xl font-bold tracking-tight">Plan intake &amp; review</h1><p class="mt-4 max-w-3xl text-lg text-slate-500">Import Chief Architect exports, review evidence, and prepare controlled handoff actions. Geometry stays local and Chief remains authoritative.</p></div>
+      <JurisdictionPanel />
       <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <div class="flex items-start justify-between"><div><h2 class="text-2xl font-bold">1. Add source files</h2><p class="mt-2 text-slate-400">Chief exports, PDFs, CAD evidence, or project data</p></div><span class="text-2xl font-bold text-slate-200">01</span></div>
         <input ref="input" class="hidden" type="file" :accept="supported" multiple @change="addFiles($event.target.files)">
