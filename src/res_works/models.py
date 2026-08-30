@@ -296,6 +296,10 @@ class CaprojInventory(RESModel):
     resource_count: int = 0
     export_errors: list[str] = Field(default_factory=list)
     missing_resources: list[str] = Field(default_factory=list)
+    project_name: str | None = None
+    resource_extensions: dict[str, int] = Field(default_factory=dict)
+    exported_file_count: int = 0
+    unmanaged_file_count: int = 0
 
 
 class DxfInventory(RESModel):

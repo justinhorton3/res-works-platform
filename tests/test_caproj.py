@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from res_works.caproj import inventory_caproj
+from res_works.caproj import extract_native_files, inventory_caproj
 
 
 def test_caproj_inventory_finds_native_files_and_resources(tmp_path: Path) -> None:
@@ -26,7 +26,14 @@ def test_caproj_inventory_finds_native_files_and_resources(tmp_path: Path) -> No
     assert inventory.native_plan_files == ["Projects/Sweeter Build/Sweeter_LOT27.plan"]
     assert inventory.native_layout_files == ["Projects/Sweeter Build/Sweeter_LOT27.layout"]
     assert inventory.resource_count == 1
+    assert inventory.project_name is None
+    assert inventory.resource_extensions == {"json": 1, "layout": 1, "plan": 1}
     assert len(inventory.sha256) == 64
+
+    extracted = extract_native_files(package, tmp_path / "extracted")
+    assert extracted["plan"][0]["byte_size"] == len(b"native plan")
+    assert extracted["layout"][0]["archive_path"].endswith("Sweeter_LOT27.layout")
+    assert (tmp_path / "extracted/Projects/Sweeter Build/Sweeter_LOT27.plan").read_bytes() == b"native plan"
 
 
 def test_caproj_requires_manifest(tmp_path: Path) -> None:
