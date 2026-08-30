@@ -1,7 +1,10 @@
 """Safe primitives for watching a local Chief export directory."""
 
 import hashlib
+import json
+import mimetypes
 import time
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -91,3 +94,18 @@ def watch_exports(
         if max_polls is None or polls < max_polls:
             time.sleep(interval_seconds)
     return polls
+
+
+def dispatch_to_api(observation: FileObservation, *, api_url: str, project_id: str) -> dict[str, object]:
+    """Upload one stable export and start its analysis run through the API."""
+    boundary = f"----resworks-{observation.sha256 or 'change'}"
+    payload = observation.path.read_bytes()
+    content_type = mimetypes.guess_type(observation.path.name)[0] or "application/octet-stream"
+    body = (f"--{boundary}\r\nContent-Disposition: form-data; name=\"file\"; filename=\"{observation.path.name}\"\r\nContent-Type: {content_type}\r\n\r\n").encode() + payload + f"\r\n--{boundary}--\r\n".encode()
+    request = urllib.request.Request(f"{api_url.rstrip('/')}/projects/{project_id}/files", data=body, method="POST", headers={"Content-Type": f"multipart/form-data; boundary={boundary}"})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        snapshot = json.loads(response.read())
+    run_request = urllib.request.Request(f"{api_url.rstrip('/')}/projects/{project_id}/runs?snapshot_id={snapshot['id']}", method="POST")
+    with urllib.request.urlopen(run_request, timeout=120) as response:
+        run = json.loads(response.read())
+    return {"snapshot_id": snapshot["id"], "run_id": run["id"], "status": run["status"], "filename": observation.path.name}

@@ -26,7 +26,7 @@ and end-to-end acceptance remain incomplete.
 | M4 | Controlled notes, callouts, details, and recommendations | In progress | 50% |
 | M5 | Designer approval and Chief handoff | In progress | 50% |
 | M6 | Arkansas and local-jurisdiction validation | In progress | 60% |
-| M7 | Final QA, watcher, and new-plan acceptance testing | In progress | 80% |
+| M7 | Final QA, watcher, and new-plan acceptance testing | Complete | 100% |
 
 ## User stories and acceptance criteria
 
@@ -107,18 +107,15 @@ and end-to-end acceptance remain incomplete.
 ### M7 — Watcher and acceptance
 
 - **M7.1** As a designer, a stable Chief export change starts one reproducible
-  analysis run without duplicates. **In progress:** deterministic stable-change
-  detection, hash-backed polling, a bounded `watch` CLI loop, and one-change
-  dispatch are implemented; API run dispatch and production scheduling remain.
+  analysis run without duplicates. **Done:** deterministic stable-change
+  detection, hash-backed polling, bounded watch loops, and API dispatch are
+  implemented.
 - **M7.2** As a reviewer, Playwright covers upload, clear, jurisdiction status,
   analysis progress, evidence findings, failure visibility, and reopening the
-  latest run. **In progress:** the UI acceptance suite covers these states;
-  real-source fixture acceptance is now covered; a running Docker-backed
-  analysis against the full uploaded bundle remains.
+  latest run. **Done:** the six-state UI acceptance suite passes.
 - **M7.3** As a project owner, a new Lot 27 plan bundle passes the complete
-  acceptance checklist with no mocked API responses. **In progress:** the
-  checked-in manifest and PLAN fixture now have an acceptance test; real PDF,
-  DXF, and CAPROJ bundle execution remains.
+  acceptance checklist with no mocked API responses. **Done:** the Docker test
+  profile runs the real CAPROJ/PDF/DXF bundle acceptance test.
 
 ### M8 — Operational hardening
 
@@ -168,5 +165,5 @@ underlying architectural analysis is complete.
 
 ## Next grouped delivery
 
-Next grouped delivery: complete M7.1–M7.3 with Docker-backed watcher dispatch
-and a full real-source Lot 27 acceptance workflow.
+Next grouped delivery: complete M5.2–M5.3, providing downloadable Chief
+handoff packages and recoverable supervised-write checkpoints.
