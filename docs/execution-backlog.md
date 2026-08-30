@@ -84,8 +84,9 @@ and end-to-end acceptance remain incomplete.
   item with decision history.
 - **M5.2** As a designer, I can export an editable, sheet-targeted Chief
   handoff checklist and CAD/detail package. **In progress:** the handoff now
-  carries approved item text, category, target sheet, and source references;
-  file export and checkpoint recovery remain next in this milestone.
+  carries approved item text, category, target sheet, and source references,
+  and can render a human-editable checklist; file download and checkpoint
+  recovery remain next in this milestone.
 - **M5.3** As a designer, I can create a checkpoint and recover before any
   supervised write to Chief.
 

@@ -77,3 +77,26 @@ def build_chief_handoff(
             "Save a Chief checkpoint before editing and export a verification PDF afterward.",
         ],
     )
+
+
+def render_handoff_markdown(handoff: ChiefHandoff) -> str:
+    """Render a human-editable checklist for supervised Chief work."""
+    lines = [
+        "# RES Works — Chief Architect handoff", "",
+        f"- Project: `{handoff.project_id}`",
+        f"- Chief version: `{handoff.chief_version}`",
+        f"- Change set: `{handoff.change_set_id}`",
+        f"- Source snapshot: `{handoff.source_snapshot_id}`",
+        "- Native file write performed: **No**", "", "## Preflight",
+        *[f"- [ ] {instruction}" for instruction in handoff.instructions],
+        "", "## Approved items",
+    ]
+    if not handoff.items:
+        lines.append("- No recommendations approved for handoff.")
+    for item in handoff.items:
+        lines.extend(["", f"### {item['title']} (`{item['id']}`)",
+            f"- Target sheet: {item.get('target_sheet') or 'Confirm in Chief'}",
+            f"- Category: {item['category']}", f"- Proposed text: {item['proposed_text']}",
+            f"- Evidence: {', '.join(item.get('source_refs') or []) or 'Confirm source evidence'}",
+            "- [ ] Applied in Chief", "- [ ] Included in verification PDF"])
+    return "\n".join(lines) + "\n"
