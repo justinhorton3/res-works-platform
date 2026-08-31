@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from res_works.ingest import ingest_artifact
-from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, FactKind, HandoffCheckpoint, ObservedFact, Recommendation
+from res_works.models import AnalysisRun, ApprovalDecision, DocumentationItem, FactKind, HandoffCheckpoint, ObservedFact, Recommendation, ReviewAnnotation
 from res_works.caproj import caproj_contents_report, extract_native_files, inventory_caproj
 from res_works.dxf import inventory_dxf
 from res_works.dxf_extract import extract_architectural_entities, summarize_dxf_evidence
@@ -26,6 +26,7 @@ from res_works.pdf_review import inventory_pdf
 from res_works.pdf_render import render_pdf_pages
 from res_works.repository import ProjectRepository
 from res_works.handoff import apply_decisions, build_change_set, build_chief_handoff, render_handoff_html, render_handoff_markdown
+from res_works.review_pdf import build_review_pdf
 
 WORKSPACE = Path("/data")
 PROJECT_ID = "sweeter-build"
@@ -146,6 +147,48 @@ def save_recommendation_decision(project_id: str, recommendation_id: str, decisi
     repository.save_approval_decision(decision)
     repository.close()
     return decision
+
+
+@app.post("/projects/{project_id}/runs/{run_id}/annotations")
+def save_review_annotation(project_id: str, run_id: str, annotation: ReviewAnnotation) -> ReviewAnnotation:
+    if annotation.run_id != run_id:
+        raise HTTPException(status_code=400, detail="Annotation run ID does not match path")
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    run = repository.get_analysis_run(run_id)
+    if run is None or run.project_id != project_id:
+        repository.close()
+        raise HTTPException(status_code=404, detail="Analysis run not found")
+    repository.save_annotation(annotation)
+    repository.close()
+    return annotation
+
+
+@app.get("/projects/{project_id}/runs/{run_id}/annotations")
+def list_review_annotations(project_id: str, run_id: str) -> list[ReviewAnnotation]:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    run = repository.get_analysis_run(run_id)
+    if run is None or run.project_id != project_id:
+        repository.close()
+        raise HTTPException(status_code=404, detail="Analysis run not found")
+    annotations = repository.list_annotations(run_id)
+    repository.close()
+    return annotations
+
+
+@app.post("/projects/{project_id}/runs/{run_id}/review-pdf")
+def create_review_pdf(project_id: str, run_id: str) -> FileResponse:
+    repository = ProjectRepository(WORKSPACE / "res-works.sqlite3")
+    run = repository.get_analysis_run(run_id)
+    annotations = repository.list_annotations(run_id) if run else []
+    snapshots = repository.list_snapshots(project_id) if run else []
+    snapshot = next((item for item in snapshots if item and item.filename.lower().endswith(".pdf")), None)
+    repository.close()
+    if run is None or run.project_id != project_id or snapshot is None or not snapshot.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=404, detail="A PDF source is required for this review run")
+    source = WORKSPACE / "incoming" / project_id / snapshot.filename
+    output = WORKSPACE / "review-revisions" / project_id / f"{run_id}-review.pdf"
+    build_review_pdf(source, output, annotations)
+    return FileResponse(output, media_type="application/pdf", filename=f"{project_id}-{run_id}-review.pdf")
 
 
 @app.get("/projects/{project_id}/recommendations/{recommendation_id}/history")

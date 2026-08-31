@@ -160,6 +160,21 @@ Until a reliable supervised Chief integration exists, RES Works should export
 editable intermediary files and instructions rather than pretend to automate
 native Chief editing.
 
+### Reviewer markup and amended PDF process
+
+The reviewer works from rendered verification sheets. A note may be linked to a
+page only, or may include coordinates for a visible point, arrow, or rectangle.
+A missing item does not receive an artificial page mark unless the reviewer
+deliberately adds one. The right-side notes rail is the working list; the source
+PDF remains immutable.
+
+When the reviewer requests an amended PDF, RES creates a new revision from the
+source snapshot. Markups are painted onto copied sheet pages and a final
+consolidated review page is appended. The revision stores the originating
+`run_id`, source snapshot ID, annotation records, reviewer, and timestamp. A
+review revision is evidence of requested changes, not proof of code compliance
+or permit approval.
+
 ## 7. Final QA loop
 
 The designer exports the candidate permit set from Chief. RES Works then:
